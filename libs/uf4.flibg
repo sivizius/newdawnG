@@ -1,0 +1,75 @@
+;( variables )
+;{
+;:  uf4@@tblYapter                      table with all the yapters.
+;:  uf4@@ctrYapter                      current number of yapters.
+;:  uf4@@numYapter                      number of all yapters.
+;:  uf4@@magicSize                      offset of the yapter-table in file.
+;}
+;( predefined yapter-types )
+;{
+  uf4@@tFinal                           =                                       0
+  ;:  ---
+  uf4@@tTemporaryTypes                  =                                       1                                       ;and above
+  ;:  temporary defined types
+  uf4@@tTypeCounter                     =                                       uf4@@tTemporaryTypes
+  ;:  ---
+  uf4@@tInvalidTypes                    =                                       65536                                   ;and above
+;}
+
+struc uf4@@addYapterType                uf4@@name*,         uf4@@func*,         uf4@@stop*
+  if ( uf4@@tTypeCounter >= uf4@@tInvalidTypes )
+    err '[asm:uf4] maximum number of yapter-types reached!', 10
+  end if
+  uf4@@lstYapterTypes                   equ                                     uf4@@name,       uf4@@func,       uf4@@stop
+  .                                     =                                       ( uf4@@tTypeCounter )
+  uf4@@tTypeCounter                     =                                       ( uf4@@tTypeCounter + 1 )
+end struc
+struc uf4@@addUnlistedYapterType
+  if ( uf4@@tTypeCounter >= uf4@@tInvalidTypes )
+    err '[asm:uf4] maximum number of yapter-types reached!', 10
+  end if
+  ;not directly accessable
+  .                                     =                                       ( uf4@@tTypeCounter )
+  uf4@@tTypeCounter                     =                                       ( uf4@@tTypeCounter + 1 )
+end struc
+
+uf4@@ctrYapter                          =                                       0
+macro uf4@@addYapter                    type,     size,     resv,     misc,     pointer
+  store                                 word  type                              at uf4@@tblYapter:( 16 * uf4@@ctrYapter + 0x00 )
+  store                                 word  size                              at uf4@@tblYapter:( 16 * uf4@@ctrYapter + 0x02 )
+  store                                 word  resv                              at uf4@@tblYapter:( 16 * uf4@@ctrYapter + 0x04 )
+  store                                 word  misc                              at uf4@@tblYapter:( 16 * uf4@@ctrYapter + 0x06 )
+  store                                 qword pointer                           at uf4@@tblYapter:( 16 * uf4@@ctrYapter + 0x08 )
+end macro
+macro uf4@@format
+  db '#!uf4:newdawn', 10, 13, 0
+  uf4@@magicSize                        =                                       ( $% )
+  uf4@@tblYapter::
+  db ( 16 * uf4@@numYapter )            dup 0x00
+;  db ( 16 * 4 ) dup 0
+  macro yapter                          uf4@@name*,                             uf4@@args&
+    irpv                                uf4@@item,                              uf4@@lstYapterTypes
+      match                             uf4@@theName =, uf4@@theFunc =, uf4@@theStop,                                uf4@@item
+        match                           `uf4@@theName,                          `uf4@@name
+          uf4@@theFunc                  uf4@@args
+          macro uf4@@theFinal           theSize,  theBase,  theFile
+            uf4@@theStop                theSize,  theBase,  theFile
+          end macro
+        end match
+      end match
+    end irpv
+    uf4@@base                           =                                       ( $ )
+    uf4@@file                           =                                       ( $% )
+  end macro
+  macro end?.yapter!
+    uf4@@size                           =                                       ( $% - uf4@@file )
+    uf4@@ctrYapter                      =                                       ( uf4@@ctrYapter + 1 )
+    uf4@@theFinal                       uf4@@size,          uf4@@base,          ( uf4@@file - uf4@@magicSize )
+  end macro
+end macro
+macro uf4@@formatFinally
+  uf4@@ctrYapter                        =                                       ( uf4@@ctrYapter + 1 )
+  uf4@@addYapter                        uf4@@tFinal,        0,                  0,                  0,                  'ycontent'
+  uf4@@numYapter                        =                                       uf4@@ctrYapter
+end macro
+format@@addFormat                       uf4,      uf4@@format,        uf4@@formatFinally

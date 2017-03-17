@@ -1,0 +1,66 @@
+;( opcodes )
+;{
+  fbc0@@opStop                          =                                       0xff
+  fbc0@@opPushByte                      =                                       0x01
+  fbc0@@opPushWord                      =                                       0x02
+  fbc0@@opPushDWord                     =                                       0x03
+  fbc0@@opPushQWord                     =                                       0x04
+  fbc0@@opAdd                           =                                       0x10
+  fbc0@@opSub                           =                                       0x11
+  fbc0@@opMul                           =                                       0x12
+  fbc0@@opDiv                           =                                       0x13
+  fbc0@@opMod                           =                                       0x14
+  fbc0@@opLet                           =                                       0x20
+;}
+macro pushByte                          value*
+  fbc0@@instruction                     fbc0@@opPushByte
+  fbc0@@operantByte                     value
+end macro
+macro pushWord                          value*
+  fbc0@@instruction                     fbc0@@opPushWord
+  fbc0@@operantWord                     value
+end macro
+macro pushDWord                         value*
+  fbc0@@instruction                     fbc0@@opPushDWord
+  fbc0@@operantDWord                    value
+end macro
+macro pushQWord                         value*
+  fbc0@@instruction                     fbc0@@opPushQWord
+  fbc0@@operantQWord                    value
+end macro
+macro pushConstant                      value*
+  if      (( value >= -( 1 shl  7 )) & ( value < ( 1 shl  7 )))
+    pushByte                            value
+  else if (( value >= -( 1 shl 15 )) & ( value < ( 1 shl 15 )))
+    pushWord                            value
+  else if (( value >= -( 1 shl 31 )) & ( value < ( 1 shl 31 )))
+    pushDWord                           value
+  else
+    pushQWord                           value
+  end if
+end macro
+macro add
+  fbc0@@instruction                     fbc0@@opAdd
+end macro
+macro sub
+  fbc0@@instruction                     fbc0@@opSub
+end macro
+macro mul
+  fbc0@@instruction                     fbc0@@opMul
+end macro
+macro div
+  fbc0@@instruction                     fbc0@@opDiv
+end macro
+macro mod
+  fbc0@@instruction                     fbc0@@opMod
+end macro
+macro let
+  fbc0@@instruction                     fbc0@@opLet
+end macro
+macro stop
+  fbc0@@instruction                     fbc0@@opStop
+end macro
+macro fbc0@@killMySelf
+  purge pushByte, pushWord, pushDWord, pushQWord
+  purge add, sub, mul, div, mod
+end macro

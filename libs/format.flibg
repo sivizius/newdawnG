@@ -1,0 +1,27 @@
+macro format@@addFormat               format@@name*,                          format@@func*,                          format@@stop*
+  format@@lstFormat                   equ                                     format@@name,       format@@func,       format@@stop
+end macro
+macro format                          format@@name*,                          format@@args&
+  macro import                        module
+    eval                              'include ', "'libs/", module, ".flibg'"
+  end macro
+  irpv                                format@@item,                           format@@lstFormat
+    match                             format@@theName =, format@@theFunc =, format@@theStop,                          format@@item
+      match                           `format@@theName,                       `format@@name
+        format@@theFunc               format@@args
+        macro format@@theFinal
+          format@@theStop
+        end macro
+      end match
+    end match
+  end irpv
+end macro
+macro end?.format!
+  format@@theFinal
+  purge import
+end macro
+
+;( some formats )
+;{
+  include                               'libs/uf4.flibg'
+;}

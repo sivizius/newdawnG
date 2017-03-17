@@ -1,0 +1,95 @@
+;( types )
+;{
+  fbc0@@tNothing                        =                                       0x00                                    ;empty operant
+  fbc0@@tConstant                       =                                       0x01                                    ;value                is a constant value
+  fbc0@@tString                         =                                       0x02                                    ;operant              is a constant string
+  fbc0@@tAddress                        =                                       0x03                                    ;value                is at address=value
+  fbc0@@tBuffer                         =                                       0x04                                    ;buffer/string        may lie at address=value
+  fbc0@@tPointer                        =                                       0x05                                    ;value/buffer/string  is at an address pointed by address
+  fbc0@@tVariable                       =                                       0x06                                    ;operant              is some kind of highlevel variable of fixed size
+  fbc0@@tRegister                       =                                       0x07                                    ;operant              is a register
+  fbc0@@tFunction                       =                                       0x08                                    ;operant              is a function
+  fbc0@@tArgument                       =                                       0x09                                    ;an argument comes after this
+  fbc0@@tTreeNode                       =                                       0x0a                                    ;its a tree-node
+  fbc0@@tOperator                       =                                       0x0b                                    ;its a operator
+  fbc0@@tStack                          =                                       0x0c                                    ;value is in the stack
+  fbc0@@tUnknown                        =                                       0xff                                    ;unknown operant, should cause an fatal error!
+;}
+macro code                              language
+  fbc0@@ctrOpcode                       =                                       ( 0 )
+  fbc0@@opcode_ptrMemory                =                                       ( $ )
+  fbc0@@opcode_ptrFile                  =                                       ( $% )
+  db ( 1 * fbc0@@numOpcode )            dup                                     ( 0 )
+  ;db 100 dup 0
+  fbc0@@offString                       =                                       ( 0 )
+  fbc0@@string_ptrMemory                =                                       ( $ )
+  fbc0@@string_ptrFile                  =                                       ( $% )
+  ;db ( fbc0@@lenString )                dup                                     ( 0 )
+  macro fbc0@@instruction               opcode*
+    store                               byte  opcode                            at ( fbc0@@opcode_ptrFile + fbc0@@ctrOpcode )
+    fbc0@@ctrOpcode                     =                                       ( fbc0@@ctrOpcode + 1 )
+  end macro
+  macro fbc0@@operantByte               value*
+    store                               byte  value                             at ( fbc0@@opcode_ptrFile + fbc0@@ctrOpcode )
+    fbc0@@ctrOpcode                     =                                       ( fbc0@@ctrOpcode + 1 )
+  end macro
+  macro fbc0@@operantWord               value*
+    store                               word  value                             at ( fbc0@@opcode_ptrFile + fbc0@@ctrOpcode )
+    fbc0@@ctrOpcode                     =                                       ( fbc0@@ctrOpcode + 2 )
+  end macro
+  macro fbc0@@operantDWord              value*
+    store                               dword value                             at ( fbc0@@opcode_ptrFile + fbc0@@ctrOpcode )
+    fbc0@@ctrOpcode                     =                                       ( fbc0@@ctrOpcode + 4 )
+  end macro
+  macro fbc0@@operantQWord              value*
+    store                               qword value                             at ( fbc0@@opcode_ptrFile + fbc0@@ctrOpcode )
+    fbc0@@ctrOpcode                     =                                       ( fbc0@@ctrOpcode + 8 )
+  end macro
+  struc fbc0@@string                    string*
+    local size, char
+    virtual                             at 0
+      db string
+      size                              =                                       ( $ )
+      store                             word size                               at ( fbc0@@string_ptrFile + fbc0@@offString )
+      repeat ( size )
+        load                            char byte                               from ( % - 1 )
+        store                           byte char                               at ( fbc0@@string_ptrFile + fbc0@@offString + 2 + % - 1 )
+      end repeat
+    end virtual
+    .                                   =                                       ( fbc0@@offString + 2 )
+    .size                               =                                       ( size )
+    fbc0@@offString                     =                                       ( fbc0@@offString + size + 2 )
+  end struc
+  import 'fruitbot_assembly'
+  match , language
+    display '[asm:fbc0] warn: default language is assembler.', 10
+  else match =assembler, language
+  else match =yasic, language
+    display '[asm:fbc0] yet another symbolic instruction code!', 10
+    import 'yasic'
+    import 'yasic_operators'
+    import 'yasic_optimise'
+    import 'yasic_queque'
+    import 'yasic_stack'
+    import 'yasic_strings'
+    import 'yasic_types'
+    import 'yasic_variables'
+  else
+    err 10, '[asm:fbc0] unknown language »', `language, '«'
+  end match
+end macro
+macro end?.code!
+  fbc0@@killMySelf
+  purge fbc0@@instruction, fbc0@@string, fbc0@@killMySelf
+  purge pushConstant
+  fbc0@@numOpcode                       =                                       ( fbc0@@ctrOpcode )
+  fbc0@@lenString                       =                                       ( fbc0@@offString )
+  uf4@@ctrYapter                        =                                       ( uf4@@ctrYapter + 1 )
+  uf4@@addYapter                        fbc0@@yBytecode,    fbc0@@numOpcode,    0,                  0,                  fbc0@@opcode_ptrFile
+  if ( fbc0@@lenString )
+    uf4@@ctrYapter                      =                                       ( uf4@@ctrYapter + 1 )
+    uf4@@addYapter                      fbc0@@yStrings,     fbc0@@lenString,    0,                  0,                  fbc0@@string_ptrFile
+  end if
+end macro
+fbc0@@yBytecode uf4@@addUnlistedYapterType
+fbc0@@yStrings  uf4@@addUnlistedYapterType

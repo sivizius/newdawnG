@@ -1,0 +1,64 @@
+null                                    =                                       ( 0 )
+false                                   equ                                     ( 0 )
+true                                    equ                                     ( 1 )
+nil                                     =                                       (( 1 shl 63 ) - 1 + ( 1 shl 63 ))
+NANOSECONDS                             =                                       ( 1 )
+MICROSECONDS                            =                                       ( 1000 * NANOSECONDS )
+MILLISECONDS                            =                                       ( 1000 * MICROSECONDS )
+SECONDS                                 =                                       ( 1 )
+MINUTES                                 =                                       ( 60 * SECONDS )
+HOURS                                   =                                       ( 60 * HOURS )
+
+__byte__                                =                                       ( 1 )
+__word__                                =                                       ( 2 )
+__dword__                               =                                       ( 4 )
+__qword__                               =                                       ( 8 )
+
+macro __pad__                           size*,                                  mode:0
+  local k
+  k                                     =                                       ((( $ + size - 1 ) and ( 0 - size )) - $ )
+  if ( mode = 0 )
+    while ( k )
+      tmp                               __random__
+      if      ( k >= __qword__ )
+        k                               =                                       ( k - __qword__ )
+        dq                              tmp
+      else if ( k >= __dword__ )
+        k                               =                                       ( k - __dword__ )
+        dd                              ( tmp and 0xffffffff )
+      else if ( k >= __word__ )
+        k                               =                                       ( k - __word__ )
+        dw                              ( tmp and 0xffff )
+      else if ( k >= __byte__ )
+        k                               =                                       ( k - __byte__ )
+        db                              ( tmp and 0xff )
+      end if
+    end while
+  else if ( mode = 1 )
+    repeat ( k )
+      nop
+    end repeat
+  else if ( mode = 2 )
+    db ( k )                            dup ( 0 )
+  end if
+end macro
+macro enumerate                         value,                                  consts&
+  local k, item
+  k                                     =                                       value
+  irp item, consts
+    item                                =                                       k
+    k                                   =                                       ( k + 1 )
+  end irp
+end macro
+
+include                                 'libs/format.flibg'
+include                                 'libs/display.flibg'
+
+;include                                 'libraries/includes/macros/hash.finc'
+;include                                 'libraries/includes/macros/ifwhile.finc'
+;include                                 'libraries/includes/macros/lists.finc'
+;include                                 'libraries/includes/macros/functions.finc'
+;include                                 'libraries/includes/macros/op.finc'
+;include                                 'libraries/includes/macros/primes.finc'
+;include                                 'libraries/includes/macros/random.finc'
+;include                                 'libraries/includes/macros/var.finc'
