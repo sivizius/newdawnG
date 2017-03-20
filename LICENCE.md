@@ -1,17 +1,16 @@
-                            SBA PUBLIC LICENCE
-                            ==================
-                          Version 1 (2017-03-17)
+#                           SBA PUBLIC LICENCE
+###                       Version 1 (2017-03-17)
                           
-                                 Preamble
-                                 --------
+##                               Preamble
+
 Aware of the responsibility towards humanity, ensouled by the will to
 serve the peace of the world as an equal member, the authors gave, in
 virtue of their inherent freedom, their work this licence. The copyright
 remains with the authors. Nevertheless, the authors publishes their work
 for free use, as long as the following terms and conditions are met:
 
-                           Terms and Conditions
-                           --------------------
+##                         Terms and Conditions
+
 1. The Work
     1. The work is this repository of files, including, but not limited
        to, documents, source codes, images, videos, audio-files, other
@@ -102,9 +101,8 @@ for free use, as long as the following terms and conditions are met:
     2. It is allowed to add additional disclaimers of warranty below the
        caption »Additional Disclaimers of Warranty«.
 
-                    Additional Disclaimers of Warranty
-                    ----------------------------------
+##                  Additional Disclaimers of Warranty
 
-                         List of involved Authors
-                         ------------------------
+##                       List of involved Authors
+
 * Sebastian Walz (sivizius)
