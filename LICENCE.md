@@ -1,5 +1,5 @@
 #                           SBA PUBLIC LICENCE
-###                       Version 1 (2017-03-17)
+#####                     Version 1 (2017-03-17)
                           
 ##                               Preamble
 
@@ -18,7 +18,13 @@ for free use, as long as the following terms and conditions are met:
     2. Everything that was created by processing of such files of this
        repository. Including, but not limited to, executable that were
        created by compiling source code of this repository.
-    3. This work also includes protocols and interfaces 
+    3. This work also includes protocols and interfaces descriped in this
+       repository included documents.
+    4. This work does not include interfaces that are defined defined by
+       an official standardisation authority, interfaces specified for a
+       certain programming language, interfaces that are widely used among
+       programmers and developers, .
+    
 
 2. Propagation of this Work
     1. Propagation of work means to do anything with it, which would make
@@ -30,7 +36,8 @@ for free use, as long as the following terms and conditions are met:
     3. Propagation of work does not include executing it on a computer
        (neither the work »as is« nor processed forms of the work), using or
        modifying a private copy, and providing a service that use this
-       work (e.g. a webserver that 
+       work on the backend (e.g. a webserver that can accessed via an
+       interface).
     4. Everyone is allowed to propagate this work or parts of this work or
        modifications of this work as long the propagation comply with this
        terms and conditions, and contain an appropriate legal notice.
@@ -95,11 +102,12 @@ for free use, as long as the following terms and conditions are met:
        with you. Should the work prove defective, you assume the cost of
        all necessary servicing, repair or correction.
 
-7. Modification of the SBA Public Licence
+7. The SBA Public Licence
     1. It is prohibited to modify the Terms and Conditions and Preamble of
        the SBA Public Licence Version 1. 
     2. It is allowed to add additional disclaimers of warranty below the
        caption »Additional Disclaimers of Warranty«.
+    3. It is allowed to publish your own work under other licences.
 
 ##                  Additional Disclaimers of Warranty
 
