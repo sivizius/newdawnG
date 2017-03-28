@@ -1,8 +1,16 @@
 #!/bin/bash
 
+function modes
+{
+  echo "[fail] valid [modes] are:"
+  echo "       * src2fbc0 (source to fbc0 byte code)"
+}
+
 if [[ $# -lt 2 ]]
 then
   echo "[fail] usage: »./make [mode] [filename]«."
+  ls
+  modes
   exit
 fi
 
@@ -21,16 +29,30 @@ echo '#t=logfile for yalave'                                >>        "make/$nam
 echo '#v=0.9.1.0-»Amanita muscaria«'                        >>        "make/$name.log"
 
 case $1 in
-  "src2fbc0")
-    fasmg "-D__fbc_version__=0" "$2" "make/$name.uf4"
-    output="make/$name.uf4"
+  "yasic2fbc0")
+    if [[ -f $2 ]]
+    then
+      echo "include 'libs/main.flibg'"                        >         "make/temp.fasmg"
+      echo "format uf4"                                       >>        "make/temp.fasmg"
+      echo "  import 'display'"                               >>        "make/temp.fasmg"
+      echo "  import 'fruitbotcode_v0'"                       >>        "make/temp.fasmg"
+      echo "  code yasic"                                     >>        "make/temp.fasmg"
+      echo "    include '$2'"                                 >>        "make/temp.fasmg"
+      echo "  end code"                                       >>        "make/temp.fasmg"
+      echo "end format"                                       >>        "make/temp.fasmg"
+      output="make/$name.uf4"
+      fasmg "make/temp.fasmg" "$output"
+    else
+      echo "[fail] »$2« does not exist!"
+      exit
+    fi
   ;;
   "fbc02amd64")
     echo "[fail] not implemented yet :-/!"                  | tee     "make/$name.log"
   ;;
   *)
-    echo "[fail] unknown mode »$1«! valid modes are:"       | tee     "make/$name.log"
-    echo "       * src2fbc0 (source to fbc0 byte code)"     | tee     "make/$name.log"
+    echo "[fail] unknown mode »$1«!"                        | tee     "make/$name.log"
+    modes
     exit
   ;;
 esac

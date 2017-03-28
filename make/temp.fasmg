@@ -1,0 +1,8 @@
+include 'libs/main.flibg'
+format uf4
+  import 'display'
+  import 'fruitbotcode_v0'
+  code yasic
+    include 'test.yasic'
+  end code
+end format

@@ -1,0 +1,12 @@
+pushConstant ( 0x23 )
+pushConstant ( 0x1337 )
+add
+
+qword hello( qword arg1, arg2, arg3, arg4 = 444 )
+  qword a = 0
+  qword b = 1
+  a = 2
+  display 'hello world', 10
+end qword
+
+hello ( 123, 456, 789 )
