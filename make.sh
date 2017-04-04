@@ -14,44 +14,53 @@ then
   exit
 fi
 
-name=$( basename $2 )
+if [[ ! -d "build" ]]
+then
+  mkdir "build"
+fi
+if [[ ! -d "final" ]]
+then
+  mkdir "final"
+fi
+name=$(echo $( basename $2 )| egrep -o "^[^.]*" )
 
-echo "#!sba:log"                                            >         "make/$name.log"
-echo '#a=_sivizius'                                         >>        "make/$name.log"
-echo '#b=ascii\\n'                                          >>        "make/$name.log"
-echo '#c=2016-03-25_07:40:04_UTC+0100'                      >>        "make/$name.log"
-echo -n '#d='                                               >>        "make/$name.log"
-date "+%Y-%m-%d_%H:%M:%S"                                   >>        "make/$name.log"
-echo '#f=/sba/out/yalave.log'                               >>        "make/$name.log"
-echo '#l=bash/en'                                           >>        "make/$name.log"
-echo '#p=/sba/doc/licenses/LICENCE.txt'                     >>        "make/$name.log"
-echo '#t=logfile for yalave'                                >>        "make/$name.log"
-echo '#v=0.9.1.0-»Amanita muscaria«'                        >>        "make/$name.log"
+echo "#!sba:log"                                            >         "build/$name.log"
+echo '#a=_sivizius'                                         >>        "build/$name.log"
+echo '#b=ascii\\n'                                          >>        "build/$name.log"
+echo '#c=2016-03-25_07:40:04_UTC+0100'                      >>        "build/$name.log"
+echo -n '#d='                                               >>        "build/$name.log"
+date "+%Y-%m-%d_%H:%M:%S"                                   >>        "build/$name.log"
+echo '#f=/sba/out/yalave.log'                               >>        "build/$name.log"
+echo '#l=bash/en'                                           >>        "build/$name.log"
+echo '#p=/sba/doc/licenses/LICENCE.txt'                     >>        "build/$name.log"
+echo '#t=logfile for yalave'                                >>        "build/$name.log"
+echo '#v=0.9.1.0-»Amanita muscaria«'                        >>        "build/$name.log"
+
+if [[ ! -f $2 ]]
+then
+  echo "[fail] »$2« does not exist!"                        2>&1| tee "build/$name.log"
+  exit
+fi
 
 case $1 in
   "yasic2fbc0")
-    if [[ -f $2 ]]
-    then
-      echo "include 'libs/main.flibg'"                        >         "make/temp.fasmg"
-      echo "format uf4"                                       >>        "make/temp.fasmg"
-      echo "  import 'display'"                               >>        "make/temp.fasmg"
-      echo "  import 'fruitbotcode_v0'"                       >>        "make/temp.fasmg"
-      echo "  code yasic"                                     >>        "make/temp.fasmg"
-      echo "    include '$2'"                                 >>        "make/temp.fasmg"
-      echo "  end code"                                       >>        "make/temp.fasmg"
-      echo "end format"                                       >>        "make/temp.fasmg"
-      output="make/$name.uf4"
-      fasmg "make/temp.fasmg" "$output"
-    else
-      echo "[fail] »$2« does not exist!"
-      exit
-    fi
+    echo "yasic@@theInputFile equ '$2'"                     >         "build/temp.fasmg"
+    echo "yasic@@theFruitbotCodeVersion equ 0"              >>        "build/temp.fasmg"
+    echo "include 'compilers/yasic.fasmg'"                  >>        "build/temp.fasmg"
+    output="final/$name.uf4"
+    fasmg "build/temp.fasmg" "$output"                      2>&1| tee "build/$name.log"
+  ;;
+  "disasm")
+    echo "disasm@@theInputFile equ '$2'"                    >         "build/temp.fasmg"
+    echo "include 'compilers/disassembler.fasmg'"           >>        "build/temp.fasmg"
+    output="final/$name.fbc"
+    fasmg "build/temp.fasmg" "$output"                      2>&1| tee "build/$name.log"
   ;;
   "fbc02amd64")
-    echo "[fail] not implemented yet :-/!"                  | tee     "make/$name.log"
+    echo "[fail] not implemented yet :-/!"                  2>&1| tee "build/$name.log"
   ;;
   *)
-    echo "[fail] unknown mode »$1«!"                        | tee     "make/$name.log"
+    echo "[fail] unknown mode »$1«!"                        2>&1| tee "build/$name.log"
     modes
     exit
   ;;

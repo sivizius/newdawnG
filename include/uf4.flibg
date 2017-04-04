@@ -42,7 +42,7 @@ macro uf4@@addYapter                    type,     size,     resv,     misc,     
   store                                 qword pointer                           at uf4@@tblYapter:( 16 * uf4@@ctrYapter + 0x08 )
 end macro
 macro uf4@@format
-  db '#!uf4:newdawn', 10, 13, 0
+  db '#!uf4:newdawn', 13, 10, 0
   uf4@@magicSize                        =                                       ( $% )
   uf4@@tblYapter::
   db ( 16 * uf4@@numYapter )            dup 0x00

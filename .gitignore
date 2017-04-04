@@ -1,9 +1,6 @@
 *~
 *.save
-*.bin
-*.elf
-*misc/*
-*output/*
-*binary/*
-*.sym
-sba.sh
+*.log
+*.uf4
+*stuff/*
+*final/*

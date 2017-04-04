@@ -1,0 +1,14 @@
+include 'include/main.flibg'
+include 'include/format.flibg'
+
+format uf4
+  import 'display'
+  match =0, yasic@@theFruitbotCodeVersion
+    import 'fruitbotcode_v0'
+  else
+    err 10, '[yasic] fail: unknown version of fbc!', 10
+  end match
+  code yasic
+    include yasic@@theInputFile
+  end code
+end format

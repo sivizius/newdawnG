@@ -1,0 +1,49 @@
+include 'include/main.flibg'
+include 'include/format.flibg'
+include 'include/display.flibg'
+include 'include/fruitbotcode_v0.flibg'
+include 'include/fruitbot_assembly.flibg'
+
+virtual                                 at null
+  disasm@@lblSignature::
+  db '#!uf4:newdawn', 13, 10, 0
+end virtual
+virtual                                 at null
+  disasm@@lblInputFile::
+  file disasm@@theInputFile
+  disasm@@lenInputFile                  =                                       ( $ )
+end virtual
+load                                    tmp0 qword                              from disasm@@lblInputFile:( 0 )
+load                                    tmp1 qword                              from disasm@@lblInputFile:( 8 )
+load                                    sig0 qword                              from disasm@@lblSignature:( 0 )
+load                                    sig1 qword                              from disasm@@lblSignature:( 8 )
+
+if ( tmp0 <> sig0 | tmp1 <> sig1 )
+  err 10, '[disasm] fail: invalid signature!', 10
+end if
+disasm@@ptrInputFile                    =                                       ( null )
+while ( true )
+  disasm@@ptrInputFile                  =                                       ( disasm@@ptrInputFile + 16 )
+  if ( disasm@@lenInputFile - disasm@@ptrInputFile < 16 )
+    err 10, '[disasm] fail: end of file reached before processing yapter-table!', 10
+    break
+  end if
+  load                                  type    word                            from disasm@@lblInputFile:( disasm@@ptrInputFile + 0x00 )
+  load                                  size    word                            from disasm@@lblInputFile:( disasm@@ptrInputFile + 0x02 )
+  load                                  resv    word                            from disasm@@lblInputFile:( disasm@@ptrInputFile + 0x04 )
+  load                                  misc    word                            from disasm@@lblInputFile:( disasm@@ptrInputFile + 0x06 )
+  load                                  pointer qword                           from disasm@@lblInputFile:( disasm@@ptrInputFile + 0x08 )
+;  displayValue 'type: 0x', type
+  if      ( type = null )
+    break
+  else if ( type = fbc0@@yBytecode )
+    db '<code>', 10
+    if ( resv = fbc0@@version )
+      fbc0@@disassemble                 disasm@@lblInputFile,                   ( pointer + 16 ),                       size
+    end if
+  else if ( type = fbc0@@yStrings )
+    db '<strings>', 10
+  else
+    err 10, '[disasm] fail: unknown yapter-type!', 10
+  end if
+end while

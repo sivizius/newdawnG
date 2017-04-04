@@ -51,8 +51,54 @@ macro enumerate                         value,                                  
   end irp
 end macro
 
-include                                 'libs/format.flibg'
-include                                 'libs/display.flibg'
+macro hb                                value&
+  local item
+  irp item, value
+    repeat 2
+      char                              =                                       ( '0' + ((( item ) shr (  8 - ( % * 4 ))) and 0x0f ))
+      if ( char > '9' )
+        char                            =                                       ( char + 'a' - '9' - 1 )
+      end if
+      db                                char
+    end repeat
+  end irp
+end macro
+macro hw                                value&
+  local item
+  irp item, value
+    repeat 4
+      char                              =                                       ( '0' + ((( item ) shr ( 16 - ( % * 4 ))) and 0x0f ))
+      if ( char > '9' )
+        char                            =                                       ( char + 'a' - '9' - 1 )
+      end if
+      db                                char
+    end repeat
+  end irp
+end macro
+macro hd                                value&
+  local item
+  irp item, value
+    repeat 8
+      char                              =                                       ( '0' + ((( item ) shr ( 32 - ( % * 4 ))) and 0x0f ))
+      if ( char > '9' )
+        char                            =                                       ( char + 'a' - '9' - 1 )
+      end if
+      db                                char
+    end repeat
+  end irp
+end macro
+macro hq                                value&
+  local item
+  irp item, value
+    repeat 16
+      char                              =                                       ( '0' + ((( item ) shr ( 64 - ( % * 4 ))) and 0x0f ))
+      if ( char > '9' )
+        char                            =                                       ( char + 'a' - '9' - 1 )
+      end if
+      db                                char
+    end repeat
+  end irp
+end macro
 
 ;include                                 'libraries/includes/macros/hash.finc'
 ;include                                 'libraries/includes/macros/ifwhile.finc'

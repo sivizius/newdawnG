@@ -1,3 +1,4 @@
+fbc0@@version                           =                                       0x00
 ;( types )
 ;{
   fbc0@@tNothing                        =                                       0x00                                    ;empty operant
@@ -85,10 +86,10 @@ macro end?.code!
   fbc0@@numOpcode                       =                                       ( fbc0@@ctrOpcode )
   fbc0@@lenString                       =                                       ( fbc0@@offString )
   uf4@@ctrYapter                        =                                       ( uf4@@ctrYapter + 1 )
-  uf4@@addYapter                        fbc0@@yBytecode,    fbc0@@numOpcode,    0,                  0,                  fbc0@@opcode_ptrFile
+  uf4@@addYapter                        fbc0@@yBytecode,    fbc0@@numOpcode,    0,                  fbc0@@version,      ( fbc0@@opcode_ptrFile - uf4@@magicSize )
   if ( fbc0@@lenString )
     uf4@@ctrYapter                      =                                       ( uf4@@ctrYapter + 1 )
-    uf4@@addYapter                      fbc0@@yStrings,     fbc0@@lenString,    0,                  0,                  fbc0@@string_ptrFile
+    uf4@@addYapter                      fbc0@@yStrings,     fbc0@@lenString,    0,                  0,                  ( fbc0@@string_ptrFile - uf4@@magicSize )
   end if
 end macro
 fbc0@@yBytecode uf4@@addUnlistedYapterType

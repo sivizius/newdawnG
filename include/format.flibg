@@ -3,7 +3,7 @@ macro format@@addFormat               format@@name*,                          fo
 end macro
 macro format                          format@@name*,                          format@@args&
   macro import                        module
-    eval                              'include ', "'libs/", module, ".flibg'"
+    eval                              'include ', "'include/", module, ".flibg'"
   end macro
   irpv                                format@@item,                           format@@lstFormat
     match                             format@@theName =, format@@theFunc =, format@@theStop,                          format@@item
@@ -23,5 +23,5 @@ end macro
 
 ;( some formats )
 ;{
-  include                               'libs/uf4.flibg'
+  include                               'include/uf4.flibg'
 ;}
