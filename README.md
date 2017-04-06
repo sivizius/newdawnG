@@ -47,7 +47,7 @@ make.sh
 This is a commandline tool you can call like this:
     ./make.sh <mode> <filename>
 The following *modes* are implemented or planned:
-- [x] *yasic2fbc0* to compile yasic source code to fruitbot code version 0 in an internal format ([uf4](#uf4)).
+- [x] *yasic2fbc0* to compile [yasic](#yasic) source code to [fruitbot code version 0](fbc0) in an internal format ([uf4](#uf4)).
 - [x] *deasm* to disassemble <filename>.
 - [ ] *fbc2amd64* to compile fb-code to amd64-code. This is still an internal format ([uf4](#uf4)).
 - [ ] *uf42elf* creates an binary file in the executable and linking format.
@@ -55,10 +55,52 @@ The following *modes* are implemented or planned:
 uf4
 ---
 *uf4* is an acronym for »universal fluffy & fancy file format« and could be spelled like »ufo«.
-The format has the following structure
-|        |»#!uf4:newdawn\r\n\0« (magic number) |
-|        | |
-|null -> | |
+The format could be descriped as:
+
+    magic_number:
+      ascii(»#!uf4:newdawn\r\n\0«)
+    yapter-table:
+      yapter*
+      [...]
+    content:
+      [...]
+
+The file format is actually a container format for so-called yapters, named after chapters of a book.
+Every of these yapters has an 16-byte-entry in the yapter-table in the following form:
+
+    type: word
+    size: word
+    resv: word
+    misc: word
+    pointer: qword
+
+Actually all bytes, except the first two, could be used freely, but it is recommented to apply to this structure.
+The first word defines the type of this entry and the yapter-table always has a final yapter of type null.
+After this final yapter could be some bytes, that could be used and refered freely by the yapters.
+It is recommented to refer relative to the label yapter-table.
+There is no list of types yet, so except for type null every other value between 0 and 2^16 could be used.
+I hope, I will document such a list soon.
+
+The following pseudo-code descripes how to parse such a file
+
+    func parseFile(fileName)
+      file theFile = openFile(fileName)
+      int size     = sizeOfFile(theFile)
+      int pointer  = 16
+
+      if ( size < 16 )
+        fail(»file too small.«)
+      end if
+
+      if ( readStringFromFile(theFile, offset = 0, lenght = 16) != »#!uf4:newdawn\r\n\0« )
+        fail(»invalid magic number!«)
+      end if
+
+      while (( size - pointer ) >= 16 )
+        parseYapter(readWordFromFile( theFile, offset = pointer ), pointer )
+        pointer = pointer + 16
+      end while
+    end function
 
 yasic
 -----
