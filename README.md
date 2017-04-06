@@ -20,7 +20,6 @@ to build the repository and an editor, if you want to view and edit the files lo
 | *final/*        | final output of the compilers. (bin, deasm, etc.)                 |
 | *include/*      | some source code. actually the core of this repository.           |
 | *yasic/*        | directory for yasic source code.                                  |
-| ---             | ---                                                               |
 | *README.md*     | this file.                                                        |
 | *LICENCE.md*    | this is the licence that applies to this repository.              |
 | *conf.sh*       | perhaps useful sometime later.                                    |
@@ -66,15 +65,8 @@ The format could be descriped as:
       [...]
 
 The file format is actually a container format for so-called yapters, named after chapters of a book.
-Every of these yapters has an 16-byte-entry in the yapter-table in the following form:
-
-    type: word
-    size: word
-    resv: word
-    misc: word
-    pointer: qword
-
-Actually all bytes, except the first two, could be used freely, but it is recommented to apply to this structure.
+Every of these yapters has an 16-byte-entry in the yapter-table.
+All bytes, except the first two, could be used freely.
 The first word defines the type of this entry and the yapter-table always has a final yapter of type null.
 After this final yapter could be some bytes, that could be used and refered freely by the yapters.
 It is recommented to refer relative to the label yapter-table.
@@ -83,23 +75,28 @@ I hope, I will document such a list soon.
 
 The following pseudo-code descripes how to parse such a file
 
-    func parseFile(fileName)
-      file theFile = openFile(fileName)
-      int size     = sizeOfFile(theFile)
-      int pointer  = 16
-
+    function parseFile( fileName )
+      file theFile = openFile( fileName )
+      int  size    = sizeOfFile( theFile )
+      int  pointer
+      word type
       if ( size < 16 )
-        fail(»file too small.«)
+        fail( »file too small!« )
       end if
-
-      if ( readStringFromFile(theFile, offset = 0, lenght = 16) != »#!uf4:newdawn\r\n\0« )
-        fail(»invalid magic number!«)
+      if ( readStringFromFile( theFile, offset = 0, lenght = 16) != »#!uf4:newdawn\r\n\0« )
+        fail( »invalid magic number!« )
       end if
-
+      pointer = 0
       while (( size - pointer ) >= 16 )
-        parseYapter(readWordFromFile( theFile, offset = pointer ), pointer )
         pointer = pointer + 16
+        type = readWordFromFile( theFile, offset = pointer )
+        if ( type )
+          parseYapter( type, pointer )
+        else
+          return()
+        end if
       end while
+      fail( »reached end of file before end of yapter-table!« )
     end function
 
 yasic
