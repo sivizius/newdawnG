@@ -48,12 +48,14 @@ case $1 in
     echo "yasic@@theFruitbotCodeVersion equ 0"              >>        "build/temp.fasmg"
     echo "include 'compilers/yasic.fasmg'"                  >>        "build/temp.fasmg"
     output="final/$name.uf4"
+    echo "fasmg 'build/temp.fasmg' '$output'"               2>&1| tee "build/$name.log"
     fasmg "build/temp.fasmg" "$output"                      2>&1| tee "build/$name.log"
   ;;
   "disasm")
     echo "disasm@@theInputFile equ '$2'"                    >         "build/temp.fasmg"
     echo "include 'compilers/disassembler.fasmg'"           >>        "build/temp.fasmg"
     output="final/$name.fbc"
+    echo "fasmg 'build/temp.fasmg' '$output'"               2>&1| tee "build/$name.log"
     fasmg "build/temp.fasmg" "$output"                      2>&1| tee "build/$name.log"
   ;;
   "fbc02amd64")

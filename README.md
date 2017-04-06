@@ -15,18 +15,23 @@ to build the repository and an editor, if you want to view and edit the files lo
 
 | file name       | description                                                       |
 | ---             | ---                                                               |
-| LICENCE.md      | this is the licence that applies to this repository.              |
-| *edit.sh*       | edit repository with system-editor (nano, vim, etc.).             |
+| *build/*        | working directory of the compilers. (logs, etc.)                  |
+| *compilers/*    | directory for different compilers used by *make.sh*.              |
+| *final/*        | final output of the compilers. (bin, deasm, etc.)                 |
+| *include/*      | some source code. actually the core of this repository.           |
+| *yasic/*        | directory for yasic source code.                                  |
+| ---             | ---                                                               |
+| *README.md*     | this file.                                                        |
+| *LICENCE.md*    | this is the licence that applies to this repository.              |
+| *conf.sh*       | perhaps useful sometime later.                                    |
+| *edit.sh*       | edit repository with system editor (nano, vim, etc.).             |
 | *make.sh*       | build repository.                                                 |
 | *exec.sh*       | run repository, this may launch teh nukes.                        |
-| *conf.sh*       | perhaps useful sometime later.                                    |
-| *\*.fincg*      | this files are indented to be included and have the fasmg-syntax. |
-| *formats.fincg* | for the `format <name>`-`end format`-structure.                   |
 
-conventions
------------
+coding conventions
+------------------
 I try to follow the following conventions:
-* Line-indentation are 2 space-characters.
+* Line indentation are 2 space characters.
 * The following criteria must apply on names:
     * Internal variables and macros of modules, which are not present in the actual source, starts with the filename, then »@@«, and then the actual name of the symbol: *format@@addFormat*.
     * Names do not contain abbreviation, except common ones like
@@ -37,36 +42,30 @@ I try to follow the following conventions:
 * the code should have a tabular shape. E.g. »=« in `a = b ;comment` should have an offset of 41, the »b« an offset of 81, »;the comment« an offset of 121, etc.;
   Sometimes multiple of 10 plus 1 are more rational.
   
+make.sh
+-------
+This is a commandline tool you can call like this:
+    ./make.sh <mode> <filename>
+The following *modes* are implemented or planned:
+- [x] *yasic2fbc0* to compile yasic source code to fruitbot code version 0 in an internal format ([uf4](#uf4)).
+- [x] *deasm* to disassemble <filename>.
+- [ ] *fbc2amd64* to compile fb-code to amd64-code. This is still an internal format ([uf4](#uf4)).
+- [ ] *uf42elf* creates an binary file in the executable and linking format.
+
+uf4
+---
+*uf4* is an acronym for »universal fluffy & fancy file format« and could be spelled like »ufo«.
+The format has the following structure
+|        |»#!uf4:newdawn\r\n\0« (magic number) |
+|        | |
+|null -> | |
+
 yasic
 -----
-This repository provides raw assembly for this bytecode as well as a higher-level language called *yasic*.
+This repository provides raw assembly for this bytecode as well as a higher level language called *yasic*.
 Yasic stands for »Yet Another Symbolic Instruction Code«.
 Do not get confused with the repository *yasic*, this is currently another language.
 I am looking forward to solve this contradiction soon.
 
-To use this language, just create a file like this:
-```
-  include 'libs/main.flibg'
-  format uf4
-    import 'display'
-    import 'fruitbotcode_v0'
-    code yasic
-      ;<    ....    >
-      ;< yasic-code >
-      ;<    ....    >
-    end code
-  end format
-```
-I recommend to include another file in the code-segment, so you just have the actual yasic-code without the rest.
-Valid code could look like this:
-```
-  qword a = 5
-  qword x
-  a = ( 1 + 2 )
-  x = ( string.size ('hello'..' '..'world!') + 2)
-  qword string.size ( string message )
-    qword b
-    b = message.size
-    return b
-  end qword
-```
+Just create a file in the *yasic* directory.
+Some examples and further documentation are provided there.
