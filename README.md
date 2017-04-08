@@ -15,9 +15,9 @@ to build the repository and an editor, if you want to view and edit the files lo
 
 | file name       | description                                                       |
 | ---             | ---                                                               |
-| *build/*        | working directory of the compilers. (logs, etc.)                  |
+| *build/*        | working directory of the compilers (logs, etc.).                  |
 | *compilers/*    | directory for different compilers used by *make.sh*.              |
-| *final/*        | final output of the compilers. (bin, deasm, etc.)                 |
+| *final/*        | final output of the compilers (bin, deasm, etc.).                 |
 | *include/*      | some source code. actually the core of this repository.           |
 | *yasic/*        | directory for yasic source code.                                  |
 | *README.md*     | this file.                                                        |
