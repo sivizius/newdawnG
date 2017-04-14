@@ -71,20 +71,20 @@ macro code                              language
   macro fbc0@@killMySelf
     purge fbc0@@instruction, fbc0@@operantByte, fbc0@@operantWord, fbc0@@operantDWord, fbc0@@operantQWord, fbc0@@operantString, fbc0@@addString
   end macro
-  import 'fruitbot_assembly'
+  import 'fruitbot/assembly'
   match , language
     display '[asm:fbc0] warn: default language is assembler.', 10
   else match =assembler, language
   else match =yasic, language
     display '[asm:fbc0] yet another symbolic instruction code!', 10
-    import 'yasic'
-    import 'yasic_operators'
-    import 'yasic_optimise'
-    import 'yasic_queque'
-    import 'yasic_stack'
-    import 'yasic_strings'
-    import 'yasic_types'
-    import 'yasic_variables'
+    import 'yasic/main'
+    import 'yasic/operators'
+    import 'yasic/optimise'
+    import 'yasic/queque'
+    import 'yasic/stack'
+    import 'yasic/strings'
+    import 'yasic/types'
+    import 'yasic/variables'
   else
     err 10, '[asm:fbc0] unknown language »', `language, '«'
   end match

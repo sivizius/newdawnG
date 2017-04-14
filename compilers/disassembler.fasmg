@@ -1,11 +1,10 @@
 include 'include/main.flibg'
 include 'include/format.flibg'
 include 'include/display.flibg'
-include 'include/fruitbotcode_v0.flibg'
-include 'include/fruitbot_assembly.flibg'
+include 'include/fruitbot/version_0.flibg'
+include 'include/fruitbot/assembly.flibg'
 disasm@@ptrStringYapter                 =                                       null
 disasm@@lenStringYapter                 =                                       null
-disasm@@ycontent                        =                                       null
 macro disasm@@buildYapter               address,  type,     size,     resv,     misc,     pointer,  lblInputFile
   if      ( type = null )
     disasm@@ycontent                    =                                       ( address + 16 )
@@ -14,6 +13,7 @@ macro disasm@@buildYapter               address,  type,     size,     resv,     
   else if ( type = fbc0@@yStrings )
     disasm@@ptrStringYapter             =                                       ( pointer + disasm@@ycontent )
     disasm@@lenStringYapter             =                                       size
+    displayValue '*0x', disasm@@ptrStringYapter
   else
     err 10, '[asm:disasm] fail: unknown yapter-type'
   end if

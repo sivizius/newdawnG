@@ -5,9 +5,10 @@ In this new approach, I have split the project in seperate compilers;
 these that compiles from source to [fruitbot-code](bytecode) in an [#uf4](internal format),
 these that converts bytecode to the final format.
 and some that just do useful stuff with the internal format.
-These compilers independent from each other and have only the internal format and maybe the bytecode in common.
+These compilers are independent from each other and have only the internal format and maybe the bytecode in common.
 Furthermore all parts are modular, so different input and output formats can be processed respectively processed.
 How the source will be processed depends entirely on the source-code itself.
+I planned to provide implementations in other languages.
 
 usage and key files
 -------------------
@@ -47,13 +48,21 @@ make.sh
 -------
 I provide a commandline tool to build which you can call like this:
 ```
-  ./make.sh \<mode> \<filename>
+./make.sh \<mode> \<filename>
 ```
 The following *modes* are implemented or planned:
-- [x] *yasic2fbc0* to compile [yasic](#yasic) source code to [fruitbot code version 0](#fbc0) in an internal format ([uf4](#uf4)).
+- [x] *yasic2fbc0* to compile [yasic](#yasic) source code to [fruitbot code version 0](#fruitbot-code) in an internal format ([uf4](#uf4)).
 - [x] *deasm* to disassemble `<filename>`
 - [ ] *fbc2amd64* to compile fb-code to amd64-code. This is still an internal format ([uf4](#uf4)).
 - [ ] *uf42elf* creates an binary file in the executable and linking format.
+
+edit.sh
+-------
+I provide a commandline tool to edit which you can simply call with:
+```
+./edit.sh
+```
+I hope, I will provide a better version someday.
 
 uf4
 ---
@@ -93,22 +102,36 @@ function parseFile( fileName )
     fail( »invalid magic number!« )
   end if
   pointer = 0
-  while (( size - pointer ) >= 16 )
+  while ( true )
+    if (( size - pointer ) < 16 )
+      fail( »reached end of file before end of yapter-table!« )
+    end if
     pointer = pointer + 16
     type = readWordFromFile( theFile, offset = pointer )
-    if ( type != null )
-      parseYapter( type, pointer )
-    else
-      return()
+    if ( buildYapter( type, pointer ) == null )
+      break
     end if
   end while
-  fail( »reached end of file before end of yapter-table!« )
+  pointer = 0
+  while ( true )
+    pointer = pointer + 16
+    type = readWordFromFile( theFile, offset = pointer )
+    if ( loadYapter( type, pointer ) == null )
+      break
+    end if
+  end while
 end function
 ```
 
 fruitbot-code
 -------------
-Fruitbot was an IRC-bot I wrote 
+Fruitbot was an IRC-bot I wrote in python about 5-8 years ago.
+I am not really sure when I wrote the bot.
+I rewrote it multiple times in purebasic and I created an bytecode, so the bot could remotly execute scripts.
+The bot only had a small instruction-set and I do not had to worry much about malicious scripts.
+
+Today *fruitbot-code* is the name of various bytecodes by me, so fruitbot code version 0 is actually version over 9000.
+But fbc0 shall be the first documented version and I will provide further Information in the *include/fruitbot*-directory.
 
 yasic
 -----
@@ -117,5 +140,5 @@ Yasic is an acronym for »Yet Another Symbolic Instruction Code«.
 Do not get confused with the repository *yasic*, it is another language.
 I am looking forward to solve this contradiction soon.
 
-Just create a file in the *yasic* directory.
-Some examples and further documentation are provided there.
+Some examples are provided in the *yasic*-directory.
+I will provide further documentation about *yasic* in the *include/yasic*-directory.
