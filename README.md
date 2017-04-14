@@ -46,10 +46,12 @@ I tried and try to follow the following conventions:
 make.sh
 -------
 I provide a commandline tool to build which you can call like this:
-    ./make.sh \<mode> \<filename>
+```
+  ./make.sh \<mode> \<filename>
+```
 The following *modes* are implemented or planned:
-- [x] *yasic2fbc0* to compile [yasic](#yasic) source code to [fruitbot code version 0](fbc0) in an internal format ([uf4](#uf4)).
-- [x] *deasm* to disassemble <filename>.
+- [x] *yasic2fbc0* to compile [yasic](#yasic) source code to [fruitbot code version 0](#fbc0) in an internal format ([uf4](#uf4)).
+- [x] *deasm* to disassemble `<filename>`
 - [ ] *fbc2amd64* to compile fb-code to amd64-code. This is still an internal format ([uf4](#uf4)).
 - [ ] *uf42elf* creates an binary file in the executable and linking format.
 
