@@ -1,12 +1,12 @@
-pushConstant ( 0x23 )
-pushConstant ( 0x1337 )
-add
-
 qword hello( qword arg1, arg2, arg3, arg4 = 444 )
-  qword a = 0
+  pushConstant ( 0x66 )
+  qword a = 1
   qword b = 1
-  a = 2
-  display 'hello world', 10
+  a = 5
 end qword
 
-hello ( 123, 456, 789 )
+pushConstant ( 0x23 )
+pushConstant ( 0x1337 )
+add ()
+
+hello ((1+2),(3*4),(5/(7-6)))

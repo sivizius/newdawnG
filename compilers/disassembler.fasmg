@@ -3,47 +3,43 @@ include 'include/format.flibg'
 include 'include/display.flibg'
 include 'include/fruitbotcode_v0.flibg'
 include 'include/fruitbot_assembly.flibg'
-
-virtual                                 at null
-  disasm@@lblSignature::
-  db '#!uf4:newdawn', 13, 10, 0
-end virtual
-virtual                                 at null
-  disasm@@lblInputFile::
-  file disasm@@theInputFile
-  disasm@@lenInputFile                  =                                       ( $ )
-end virtual
-load                                    tmp0 qword                              from disasm@@lblInputFile:( 0 )
-load                                    tmp1 qword                              from disasm@@lblInputFile:( 8 )
-load                                    sig0 qword                              from disasm@@lblSignature:( 0 )
-load                                    sig1 qword                              from disasm@@lblSignature:( 8 )
-
-if ( tmp0 <> sig0 | tmp1 <> sig1 )
-  err 10, '[disasm] fail: invalid signature!', 10
-end if
-disasm@@ptrInputFile                    =                                       ( null )
-while ( true )
-  disasm@@ptrInputFile                  =                                       ( disasm@@ptrInputFile + 16 )
-  if ( disasm@@lenInputFile - disasm@@ptrInputFile < 16 )
-    err 10, '[disasm] fail: end of file reached before processing yapter-table!', 10
-    break
-  end if
-  load                                  type    word                            from disasm@@lblInputFile:( disasm@@ptrInputFile + 0x00 )
-  load                                  size    word                            from disasm@@lblInputFile:( disasm@@ptrInputFile + 0x02 )
-  load                                  resv    word                            from disasm@@lblInputFile:( disasm@@ptrInputFile + 0x04 )
-  load                                  misc    word                            from disasm@@lblInputFile:( disasm@@ptrInputFile + 0x06 )
-  load                                  pointer qword                           from disasm@@lblInputFile:( disasm@@ptrInputFile + 0x08 )
-;  displayValue 'type: 0x', type
-  if      ( type = null )
-    break
-  else if ( type = fbc0@@yBytecode )
+disasm@@ptrStringYapter                 =                                       null
+disasm@@lenStringYapter                 =                                       null
+macro disasm@@parseYapter               type,     size,     resv,     misc,     pointer,  lblInputFile
+  local offs, lenght, char
+  if ( type = fbc0@@yBytecode )
     db '<code>', 10
     if ( resv = fbc0@@version )
-      fbc0@@disassemble                 disasm@@lblInputFile,                   ( pointer + 16 ),                       size
+      fbc0@@disassemble                 lblInputFile,       ( pointer + uf4@@magicSize ), size
     end if
   else if ( type = fbc0@@yStrings )
     db '<strings>', 10
+    offs                                =                                       null
+    disasm@@ptrStringYapter             =                                       ( pointer + uf4@@magicSize )
+    disasm@@lenStringYapter             =                                       size
+    while true
+      if (( size - offs ) < 2 )
+        break
+      end if
+      load                              lenght word                             from lblInputFile:( disasm@@ptrStringYapter + offs )
+      if (( size - offs - 2 ) < lenght )
+        err 10, '[asm:disasm] corrupted string-yapter'
+      end if
+      db                                '  *0x'
+      hq                                ( offs + 2 )
+      db                                ' (0x'
+      hw                                lenght
+      db                                '): »'
+      repeat ( lenght )
+        load                            char byte                               from lblInputFile:( disasm@@ptrStringYapter + offs + 2 + % - 1 )
+        db                              char
+      end repeat
+      db                                '«', 10
+      offs                              =                                       ( offs + lenght + 2 )
+    end while
   else
-    err 10, '[disasm] fail: unknown yapter-type!', 10
+    err 10, '[asm:disasm] fail: unknown yapter-type'
   end if
-end while
+end macro
+
+uf4@@parseFile                          disasm@@theInputFile,         disasm@@parseYapter

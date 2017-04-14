@@ -30,7 +30,7 @@
                                         yasic@@opConnectStrings, \              ; x .. y
                                         yasic@@opFinal
   yasic@@opSignedShiftLeft              =                                       yasic@@opUnsignedShiftLeft
-  displayValue 'yasic@@opFinal = 0x', yasic@@opFinal
+  ;displayValue 'yasic@@opFinal = 0x', yasic@@opFinal
 ;}
 ;( operator precedence )
 ;{
@@ -115,6 +115,12 @@ macro yasic@@opCompile                  operator*
   if false
   else if ( operator = yasic@@opAdd )
     add
+  else if ( operator = yasic@@opSub )
+    sub
+  else if ( operator = yasic@@opMul )
+    mul
+  else if ( operator = yasic@@opDiv )
+    div
   else
     err 10, '[asm:yasic] cannot compile operation'
   end if

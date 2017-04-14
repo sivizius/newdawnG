@@ -11,5 +11,5 @@
                                         yasic@@tFunction, \
                                         yasic@@tItem, \
                                         yasic@@tFinal
-  displayValue 'yasic@@tFinal = 0x', yasic@@tFinal
+  ;displayValue 'yasic@@tFinal = 0x', yasic@@tFinal
 ;}

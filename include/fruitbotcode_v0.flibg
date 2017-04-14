@@ -17,15 +17,14 @@ fbc0@@version                           =                                       
   fbc0@@tUnknown                        =                                       0xff                                    ;unknown operant, should cause an fatal error!
 ;}
 macro code                              language
+  fbc0@@offString                       =                                       ( 0 )
+  fbc0@@string_ptrMemory                =                                       ( $ )
+  fbc0@@string_ptrFile                  =                                       ( $% )
+  db ( fbc0@@lenString )                dup                                     ( 0 )
   fbc0@@ctrOpcode                       =                                       ( 0 )
   fbc0@@opcode_ptrMemory                =                                       ( $ )
   fbc0@@opcode_ptrFile                  =                                       ( $% )
   db ( 1 * fbc0@@numOpcode )            dup                                     ( 0 )
-  ;db 100 dup 0
-  fbc0@@offString                       =                                       ( 0 )
-  fbc0@@string_ptrMemory                =                                       ( $ )
-  fbc0@@string_ptrFile                  =                                       ( $% )
-  ;db ( fbc0@@lenString )                dup                                     ( 0 )
   macro fbc0@@instruction               opcode*
     store                               byte  opcode                            at ( fbc0@@opcode_ptrFile + fbc0@@ctrOpcode )
     fbc0@@ctrOpcode                     =                                       ( fbc0@@ctrOpcode + 1 )
@@ -46,21 +45,32 @@ macro code                              language
     store                               qword value                             at ( fbc0@@opcode_ptrFile + fbc0@@ctrOpcode )
     fbc0@@ctrOpcode                     =                                       ( fbc0@@ctrOpcode + 8 )
   end macro
-  struc fbc0@@string                    string*
-    local size, char
+  macro fbc0@@operantString             string*
+    local temp
+    temp                                fbc0@@addString                         string
+    store                               qword temp                              at ( fbc0@@opcode_ptrFile + fbc0@@ctrOpcode )
+    fbc0@@ctrOpcode                     =                                       ( fbc0@@ctrOpcode + 8 )
+  end macro
+  struc fbc0@@addString                 string*
+;    displayValue 'address: 0x', fbc0@@offString
+    local size, char, virturtle
     virtual                             at 0
+      virturtle::
       db string
       size                              =                                       ( $ )
-      store                             word size                               at ( fbc0@@string_ptrFile + fbc0@@offString )
-      repeat ( size )
-        load                            char byte                               from ( % - 1 )
-        store                           byte char                               at ( fbc0@@string_ptrFile + fbc0@@offString + 2 + % - 1 )
-      end repeat
     end virtual
+    store                               word size                               at ( fbc0@@string_ptrFile + fbc0@@offString )
+    repeat ( size )
+      load                              char byte                               from virturtle:( % - 1 )
+      store                             byte char                               at ( fbc0@@string_ptrFile + fbc0@@offString + 2 + % - 1 )
+    end repeat
     .                                   =                                       ( fbc0@@offString + 2 )
     .size                               =                                       ( size )
     fbc0@@offString                     =                                       ( fbc0@@offString + size + 2 )
   end struc
+  macro fbc0@@killMySelf
+    purge fbc0@@instruction, fbc0@@operantByte, fbc0@@operantWord, fbc0@@operantDWord, fbc0@@operantQWord, fbc0@@operantString, fbc0@@addString
+  end macro
   import 'fruitbot_assembly'
   match , language
     display '[asm:fbc0] warn: default language is assembler.', 10
@@ -81,16 +91,15 @@ macro code                              language
 end macro
 macro end?.code!
   fbc0@@killMySelf
-  purge fbc0@@instruction, fbc0@@string, fbc0@@killMySelf
-  purge pushConstant
-  fbc0@@numOpcode                       =                                       ( fbc0@@ctrOpcode )
+  purge fbc0@@killMySelf
   fbc0@@lenString                       =                                       ( fbc0@@offString )
-  uf4@@ctrYapter                        =                                       ( uf4@@ctrYapter + 1 )
-  uf4@@addYapter                        fbc0@@yBytecode,    fbc0@@numOpcode,    0,                  fbc0@@version,      ( fbc0@@opcode_ptrFile - uf4@@magicSize )
-  if ( fbc0@@lenString )
+  if ( fbc0@@lenString > 0 )
     uf4@@ctrYapter                      =                                       ( uf4@@ctrYapter + 1 )
     uf4@@addYapter                      fbc0@@yStrings,     fbc0@@lenString,    0,                  0,                  ( fbc0@@string_ptrFile - uf4@@magicSize )
   end if
+  fbc0@@numOpcode                       =                                       ( fbc0@@ctrOpcode )
+  uf4@@ctrYapter                        =                                       ( uf4@@ctrYapter + 1 )
+  uf4@@addYapter                        fbc0@@yBytecode,    fbc0@@numOpcode,    0,                  fbc0@@version,      ( fbc0@@opcode_ptrFile - uf4@@magicSize )
 end macro
 fbc0@@yBytecode uf4@@addUnlistedYapterType
 fbc0@@yStrings  uf4@@addUnlistedYapterType

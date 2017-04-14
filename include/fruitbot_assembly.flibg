@@ -1,6 +1,5 @@
 ;( opcodes )
 ;{
-  fbc0@@opStop                          =                                       0xff
   fbc0@@opPushByte                      =                                       0x01
   fbc0@@opPushWord                      =                                       0x02
   fbc0@@opPushDWord                     =                                       0x03
@@ -11,9 +10,15 @@
   fbc0@@opDiv                           =                                       0x13
   fbc0@@opMod                           =                                       0x14
   fbc0@@opLet                           =                                       0x20
+  fbc0@@opCall                          =                                       0x21
+  fbc0@@opAllocGlobal                   =                                       0xfb
+  fbc0@@opAllocLocal                    =                                       0xfc
+  fbc0@@opAllocate                      =                                       0xfd
+  fbc0@@opLbl                           =                                       0xfe
+  fbc0@@opStop                          =                                       0xff
 ;}
 macro fbc0@@disassemble                 context*, address*, size*
-  local pointer, instruction, temp
+  local pointer, instruction, temp, lenght, char
   pointer                               =                                       null
   while ( pointer < size )
     load                                instruction byte                        from context#:( address + pointer )
@@ -53,9 +58,39 @@ macro fbc0@@disassemble                 context*, address*, size*
     else if ( instruction = fbc0@@opLet )
       db 'let'
     else if ( instruction = fbc0@@opStop )
-      db '@0x'
-      hq pointer
-      db ':'
+      db 'stop'
+    else if ( instruction = fbc0@@opCall )
+      db 'call'
+    else if ( instruction = fbc0@@opLbl )
+      db '*0x'
+      hq ( pointer - 1 )
+      db ' '
+      load                              temp qword                              from context#:( address + pointer )
+      pointer                           =                                       ( pointer + 8 )
+      if      ( disasm@@ptrStringYapter = null )
+        err 10, '[fbc] there is no string-yapter'
+        break
+      else if (( temp < 2 ) | (( disasm@@lenStringYapter - temp ) < 0 ))
+        err 10, '[fbc] pointer out of bonds'
+        break
+      else
+        load                            lenght word                             from context#:( disasm@@ptrStringYapter + temp - 2 )
+        if (( disasm@@lenStringYapter - temp ) < lenght )
+          err 10, '[fbc] corrupted string'
+          break
+        end if
+        repeat ( lenght )
+          load                          char byte                               from context#:( disasm@@ptrStringYapter + temp + % - 1 )
+          db char
+        end repeat
+        db ':'
+      end if
+    else if ( instruction = fbc0@@opAllocGlobal )
+      db 'allocGlobal'
+    else if ( instruction = fbc0@@opAllocLocal )
+      db 'allocLocal'
+    else if ( instruction = fbc0@@opAllocate )
+      db 'allocate'
     else
       db '<0x'
       hb instruction
@@ -92,26 +127,43 @@ macro pushConstant                      value*
     pushQWord                           value
   end if
 end macro
-macro add
+macro add                               ignore
   fbc0@@instruction                     fbc0@@opAdd
 end macro
-macro sub
+macro sub                               ignore
   fbc0@@instruction                     fbc0@@opSub
 end macro
-macro mul
+macro mul                               ignore
   fbc0@@instruction                     fbc0@@opMul
 end macro
-macro div
+macro div                               ignore
   fbc0@@instruction                     fbc0@@opDiv
 end macro
-macro mod
+macro mod                               ignore
   fbc0@@instruction                     fbc0@@opMod
 end macro
-macro let
+macro let                               ignore
   fbc0@@instruction                     fbc0@@opLet
 end macro
-macro stop
+macro stop                              ignore
   fbc0@@instruction                     fbc0@@opStop
+end macro
+macro call                              varName
+  pushConstant                          ( @#varName#.address )
+  fbc0@@instruction                     fbc0@@opCall
+end macro
+macro allocGlobal                       ignore
+  fbc0@@instruction                     fbc0@@opAllocGlobal
+end macro
+macro allocLocal                        ignore
+  fbc0@@instruction                     fbc0@@opAllocLocal
+end macro
+macro allocate                          ignore
+  fbc0@@instruction                     fbc0@@opAllocate
+end macro
+macro lbl                               name
+  fbc0@@instruction                     fbc0@@opLbl
+  fbc0@@operantString                   `name
 end macro
 macro fbc0@@killMySelf
   purge pushByte, pushWord, pushDWord, pushQWord

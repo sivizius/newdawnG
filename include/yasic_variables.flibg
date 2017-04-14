@@ -12,23 +12,38 @@
 ;      end match
 ;    end while
 yasic@@global                           equ                                     +
-yasic@@idOfType                         =                                       null
+yasic@@idOfType                         =                                       1
+yasic@@maxNumOfTypes                    =                                       256
+virtual                                 at null
+  yasic@@lblTypes::
+    rw                                  yasic@@maxNumOfTypes
+end virtual
 macro yasic@@lstFunctions
 end macro
 macro yasic@@ctrLocalVariables
 end macro
 macro yasic@@numLocalVariables
 end macro
+macro pushExpression                    expression*
+  yasic@@parseExpression                expression
+  yasic@@displayExpression
+  yasic@@optimiseExpression
+  yasic@@displayExpression
+  yasic@@compileExpression
+end macro
 macro yasic@@newType                    theType*,                               theSize*
   yasic@@#theType#_ctrData              =                                       null
   yasic@@#theType#_ctrResv              =                                       null
   yasic@@#theType#_theID                =                                       yasic@@idOfType
   yasic@@idOfType                       =                                       ( yasic@@idOfType + 1 )
+  store                                 word theSize                            at yasic@@lblTypes:( yasic@@#theType#_theID * __word__ )
   macro yasic@@ctrLocalVariables
     yasic@@ctrLocalVariables
-    pushConstant                        .#theType#_numVars
-    pushConstant                        theSize
-    
+    if ( .#theType#_numVars > null )
+      pushConstant                      yasic@@#theType#_theID
+      pushConstant                      .#theType#_numVars
+      allocLocal
+    end if
     .#theType#_ctrVars                  =                                       null
   end macro
   macro yasic@@numLocalVariables
@@ -47,33 +62,39 @@ macro yasic@@newType                    theType*,                               
         macro varName                   arguments&
           local anArgument, restArguments, theArguments, lstArguments
           local aParameter, theType, theParameter, theDefault
-          display 'call ', `varName, '()', 10
+          display 'call ', `varName, '()'
           match                         =( theArguments =),                     arguments
             define                      lstArguments                            theArguments
             irpv                        aParameter,                             yasic@@#varName#_params
               match                     anArgument =, restArguments,            lstArguments
                 define                  lstArguments                            restArguments
                 match                   theType =, theParameter =, theDefault,  aParameter
-                  display '  ', `anArgument, ' -> ', `theParameter, 10
+                  display 10, '  ', `anArgument, ' -> ', `theParameter, 10
+                  pushExpression        anArgument
                 else match              theType =, theParameter,                aParameter
-                  display '  ', `anArgument, ' -> ', `theParameter, 10
+                  display 10, '  ', `anArgument, ' -> ', `theParameter, 10
+                  pushExpression        anArgument
                 end match
               else match                anArgument,                             lstArguments
                 define                  lstArguments
                 match                   theType =, theParameter =, theDefault,  aParameter
-                  display '  ', `anArgument, ' +> ', `theParameter, 10
+                  display 10, '  ', `anArgument, ' +> ', `theParameter, 10
+                  pushExpression        anArgument
                 else match              theType =, theParameter,                aParameter
-                  display '  ', `anArgument, ' +> ', `theParameter, 10
+                  display 10, '  ', `anArgument, ' +> ', `theParameter, 10
+                  pushExpression        anArgument
                 end match
               else match                ,                                       lstArguments
                 match                   theType =, theParameter =, theDefault,  aParameter
-                  display '  ', `theDefault, ' => ', `theParameter, 10
+                  display 10, '  ', `theDefault, ' => ', `theParameter, 10
+                  pushExpression        theDefault
                 else
                   err 10, '[asm:yasic] not enought arguments'
                 end match
               end match
             end irpv
           end match
+          call                          varName
         end macro
         ;( parse parameters )
         define                          lstParameters                           theParameters
@@ -135,9 +156,8 @@ macro yasic@@newType                    theType*,                               
         end macro
         yasic@@global                   equ                                     -
         macro end?.#theType!
-          stop
           yasic@@numLocalVariables
-          .size                         =                                       ( $ - . )
+          .size                         =                                       ( fbc0@@ctrOpcode - .address )
           display '}', 10
           esc end macro
           yasic@@killLocalStuff
@@ -151,9 +171,12 @@ macro yasic@@newType                    theType*,                               
         macro content
           esc macro varName#@@definition
           @#varName#:
+          .address                      =                                       ( fbc0@@ctrOpcode )
+          lbl varName
           yasic@@ctrLocalVariables
+          allocate
           display `theType, ': function ', `varName, ' ( ', `theParameters, ' ):', 10
-          displayValue '  addr = 0x', .
+          displayValue '  addr = 0x', .address
           displayValue '  size = 0x', .size
           display '{', 10
         end macro
@@ -179,6 +202,7 @@ macro yasic@@newType                    theType*,                               
     ;displayValue 'num data 0x', .qword_ctrData
         .var#varName#_value             =                                       ( .#theType#_ctrVars )
         .#theType#_ctrVars              =                                       ( .#theType#_ctrVars + 1 )
+        ;displayValue 'base: 0x', .
         macro varName                   value*
           local expression
           match                         == expression,                          value
@@ -205,4 +229,7 @@ macro yasic@@newType                    theType*,                               
     content
   end macro
 end macro
+yasic@@newType                          byte,     __byte__
+yasic@@newType                          word,     __word__
+yasic@@newType                          dword,    __dword__
 yasic@@newType                          qword,    __qword__

@@ -142,5 +142,6 @@ macro yasic@@optimiseExpression
   end while
   yasic@@ptrQueque                      =                                       null
   yasic@@endQueque                      =                                       null
+  yasic@@topStack                       =                                       null
   yasic@@unstackToQueque
 end macro

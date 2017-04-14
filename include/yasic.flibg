@@ -209,16 +209,18 @@ macro yasic@@parseChar                  char&
 end macro
 
 macro yasic@@parseExpression            theExpression&
+  yasic@@endQueque                      =                                       null
+  yasic@@ptrStack                       =                                       null
   yasic@@expectOperant                  =                                       true
   yasic@@currentState                   =                                       null
   local lstExpression, charExpression, restExpression, temp
   define                                lstExpression                           theExpression
   while true
-    match charExpression restExpression, lstExpression
+    match                               charExpression restExpression,          lstExpression
       define                            lstExpression                           restExpression
       yasic@@parseChar                  charExpression
     else
-      match any, lstExpression
+      match                             any,                                    lstExpression
         yasic@@parseChar                any
       end match
       break
@@ -294,7 +296,7 @@ end macro
 
 macro fbc0@@killMySelf
   stop
-  display 10, 'list of functions:', 10
+  ;display 10, 'list of functions:', 10
   yasic@@global                         equ                                     -
   yasic@@lstFunctions
   fbc0@@killMySelf
