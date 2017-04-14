@@ -95,11 +95,11 @@ macro end?.code!
   fbc0@@lenString                       =                                       ( fbc0@@offString )
   if ( fbc0@@lenString > 0 )
     uf4@@ctrYapter                      =                                       ( uf4@@ctrYapter + 1 )
-    uf4@@addYapter                      fbc0@@yStrings,     fbc0@@lenString,    0,                  0,                  ( fbc0@@string_ptrFile - uf4@@magicSize )
+    uf4@@addYapter                      fbc0@@yStrings,     fbc0@@lenString,    0,                  0,                  ( fbc0@@string_ptrFile - uf4@@lblYcontent )
   end if
   fbc0@@numOpcode                       =                                       ( fbc0@@ctrOpcode )
   uf4@@ctrYapter                        =                                       ( uf4@@ctrYapter + 1 )
-  uf4@@addYapter                        fbc0@@yBytecode,    fbc0@@numOpcode,    0,                  fbc0@@version,      ( fbc0@@opcode_ptrFile - uf4@@magicSize )
+  uf4@@addYapter                        fbc0@@yBytecode,    fbc0@@numOpcode,    0,                  fbc0@@version,      ( fbc0@@opcode_ptrFile - uf4@@lblYcontent )
 end macro
 fbc0@@yBytecode uf4@@addUnlistedYapterType
 fbc0@@yStrings  uf4@@addUnlistedYapterType

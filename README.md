@@ -63,18 +63,19 @@ The format could be descriped as:
     yapter-table:
       yapter*
       [...]
-    content:
+    ycontent:
       [...]
 
 The file format is actually a container format for so-called yapters, named after chapters of a book.
 Every of these yapters has an 16-byte-entry in the yapter-table.
 All bytes, except the first two, can be used freely.
-The first word defines the type of the entry and the yapter-table always has a final yapter of type null.
+The first word defines the type of the entry and the yapter-table always has a final yapter.
+I recomment the value `null` as the `type` of the final yapter.
 After this final yapter could be some bytes, that could be used and refered freely by the yapters.
-It is recommented to refer relatively to the label yapter-table.
+I recomment to refer relatively to the label `ycontent`.
 There is no list of types yet, so except for type null every other value between 0 and 2^16 could be used.
 
-I hope, I will compile a list soon.
+I hope, I will provide a list soon.
 
 The following pseudo-code describes how to parse a uf4 file:
 ```
@@ -93,7 +94,7 @@ function parseFile( fileName )
   while (( size - pointer ) >= 16 )
     pointer = pointer + 16
     type = readWordFromFile( theFile, offset = pointer )
-    if ( type )
+    if ( type != null )
       parseYapter( type, pointer )
     else
       return()

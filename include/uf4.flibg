@@ -47,6 +47,7 @@ macro uf4@@format
   uf4@@magicSize                        =                                       ( $% )
   uf4@@tblYapter::
   db ( 16 * uf4@@numYapter )            dup 0x00
+  uf4@@lblYcontent                      =                                       ( $% )
   macro yapter                          uf4@@name*,                             uf4@@args&
     irpv                                uf4@@item,                              uf4@@lstYapterTypes
       match                             uf4@@theName =, uf4@@theFunc =, uf4@@theStop,                                uf4@@item
@@ -64,7 +65,7 @@ macro uf4@@format
   macro end?.yapter!
     uf4@@size                           =                                       ( $% - uf4@@file )
     uf4@@ctrYapter                      =                                       ( uf4@@ctrYapter + 1 )
-    uf4@@theFinal                       uf4@@size,          uf4@@base,          ( uf4@@file - uf4@@magicSize )
+    uf4@@theFinal                       uf4@@size,          uf4@@base,          ( uf4@@file - uf4@@lblYcontent )
   end macro
 end macro
 macro uf4@@formatFinally
@@ -78,7 +79,7 @@ virtual                                 at null
   uf4@@lblSignature::
   db uf4@@magicString
 end virtual
-macro uf4@@parseFile                    fileName,                               parseYapter
+macro uf4@@parseFile                    fileName*,                              buildYapter*,                           loadYapter*
   local lblInputFile, ptrInputFile, lenInputFile
   local tmp0, tmp1, sig0, sig1
   local type, size, resv, misc, pointer
@@ -107,11 +108,16 @@ macro uf4@@parseFile                    fileName,                               
     load                                resv    word                            from lblInputFile:( ptrInputFile + 0x04 )
     load                                misc    word                            from lblInputFile:( ptrInputFile + 0x06 )
     load                                pointer qword                           from lblInputFile:( ptrInputFile + 0x08 )
-;    displayValue 'type: 0x', type
-    if      ( type = null )
-      break
-    else
-      parseYapter                       type,     size,     resv,     misc,     pointer,  lblInputFile
-    end if
+    buildYapter                         ptrInputFile,       type,     size,     resv,     misc,     pointer,  lblInputFile
+  end while
+  ptrInputFile                          =                                       ( null )
+  while ( true )
+    ptrInputFile                        =                                       ( ptrInputFile + 16 )
+    load                                type    word                            from lblInputFile:( ptrInputFile + 0x00 )
+    load                                size    word                            from lblInputFile:( ptrInputFile + 0x02 )
+    load                                resv    word                            from lblInputFile:( ptrInputFile + 0x04 )
+    load                                misc    word                            from lblInputFile:( ptrInputFile + 0x06 )
+    load                                pointer qword                           from lblInputFile:( ptrInputFile + 0x08 )
+    loadYapter                          ptrInputFile,       type,     size,     resv,     misc,     pointer,  lblInputFile
   end while
 end macro

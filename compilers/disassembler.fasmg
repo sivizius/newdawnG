@@ -5,18 +5,31 @@ include 'include/fruitbotcode_v0.flibg'
 include 'include/fruitbot_assembly.flibg'
 disasm@@ptrStringYapter                 =                                       null
 disasm@@lenStringYapter                 =                                       null
-macro disasm@@parseYapter               type,     size,     resv,     misc,     pointer,  lblInputFile
+disasm@@ycontent                        =                                       null
+macro disasm@@buildYapter               address,  type,     size,     resv,     misc,     pointer,  lblInputFile
+  if      ( type = null )
+    disasm@@ycontent                    =                                       ( address + 16 )
+    break
+  else if ( type = fbc0@@yBytecode )
+  else if ( type = fbc0@@yStrings )
+    disasm@@ptrStringYapter             =                                       ( pointer + disasm@@ycontent )
+    disasm@@lenStringYapter             =                                       size
+  else
+    err 10, '[asm:disasm] fail: unknown yapter-type'
+  end if
+end macro
+macro disasm@@loadYapter                address,  type,     size,     resv,     misc,     pointer,  lblInputFile
   local offs, lenght, char
-  if ( type = fbc0@@yBytecode )
+  if      ( type = null )
+    break
+  else if ( type = fbc0@@yBytecode )
     db '<code>', 10
     if ( resv = fbc0@@version )
-      fbc0@@disassemble                 lblInputFile,       ( pointer + uf4@@magicSize ), size
+      fbc0@@disassemble                 lblInputFile,                           ( pointer + disasm@@ycontent ),         size
     end if
   else if ( type = fbc0@@yStrings )
     db '<strings>', 10
     offs                                =                                       null
-    disasm@@ptrStringYapter             =                                       ( pointer + uf4@@magicSize )
-    disasm@@lenStringYapter             =                                       size
     while true
       if (( size - offs ) < 2 )
         break
@@ -37,9 +50,7 @@ macro disasm@@parseYapter               type,     size,     resv,     misc,     
       db                                '«', 10
       offs                              =                                       ( offs + lenght + 2 )
     end while
-  else
-    err 10, '[asm:disasm] fail: unknown yapter-type'
   end if
 end macro
 
-uf4@@parseFile                          disasm@@theInputFile,         disasm@@parseYapter
+uf4@@parseFile                          disasm@@theInputFile,                   disasm@@buildYapter,                    disasm@@loadYapter
