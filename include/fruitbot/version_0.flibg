@@ -1,4 +1,4 @@
-fbc0@@version                           =                                       0x00
+fbc0@@version                           =                                       0xc0fb
 ;( types )
 ;{
   fbc0@@tNothing                        =                                       0x00                                    ;empty operant
@@ -17,89 +17,82 @@ fbc0@@version                           =                                       
   fbc0@@tUnknown                        =                                       0xff                                    ;unknown operant, should cause an fatal error!
 ;}
 macro code                              language
-  fbc0@@offString                       =                                       ( 0 )
-  fbc0@@string_ptrMemory                =                                       ( $ )
-  fbc0@@string_ptrFile                  =                                       ( $% )
-  db ( fbc0@@lenString )                dup                                     ( 0 )
-  fbc0@@ctrOpcode                       =                                       ( 0 )
-  fbc0@@opcode_ptrMemory                =                                       ( $ )
-  fbc0@@opcode_ptrFile                  =                                       ( $% )
-  db ( 1 * fbc0@@numOpcode )            dup                                     ( 0 )
-  macro fbc0@@instruction               opcode*
-    store                               byte  opcode                            at ( fbc0@@opcode_ptrFile + fbc0@@ctrOpcode )
-    fbc0@@ctrOpcode                     =                                       ( fbc0@@ctrOpcode + 1 )
-  end macro
-  macro fbc0@@operantByte               value*
-    store                               byte  value                             at ( fbc0@@opcode_ptrFile + fbc0@@ctrOpcode )
-    fbc0@@ctrOpcode                     =                                       ( fbc0@@ctrOpcode + 1 )
-  end macro
-  macro fbc0@@operantWord               value*
-    store                               word  value                             at ( fbc0@@opcode_ptrFile + fbc0@@ctrOpcode )
-    fbc0@@ctrOpcode                     =                                       ( fbc0@@ctrOpcode + 2 )
-  end macro
-  macro fbc0@@operantDWord              value*
-    store                               dword value                             at ( fbc0@@opcode_ptrFile + fbc0@@ctrOpcode )
-    fbc0@@ctrOpcode                     =                                       ( fbc0@@ctrOpcode + 4 )
-  end macro
-  macro fbc0@@operantQWord              value*
-    store                               qword value                             at ( fbc0@@opcode_ptrFile + fbc0@@ctrOpcode )
-    fbc0@@ctrOpcode                     =                                       ( fbc0@@ctrOpcode + 8 )
-  end macro
-  macro fbc0@@operantString             string*
-    local temp
-    temp                                fbc0@@addString                         string
-    store                               qword temp                              at ( fbc0@@opcode_ptrFile + fbc0@@ctrOpcode )
-    fbc0@@ctrOpcode                     =                                       ( fbc0@@ctrOpcode + 8 )
-  end macro
-  struc fbc0@@addString                 string*
-;    displayValue 'address: 0x', fbc0@@offString
-    local size, char, virturtle
-    virtual                             at 0
-      virturtle::
-      db string
-      size                              =                                       ( $ )
-    end virtual
-    store                               word size                               at ( fbc0@@string_ptrFile + fbc0@@offString )
-    repeat ( size )
-      load                              char byte                               from virturtle:( % - 1 )
-      store                             byte char                               at ( fbc0@@string_ptrFile + fbc0@@offString + 2 + % - 1 )
-    end repeat
-    .                                   =                                       ( fbc0@@offString + 2 )
-    .size                               =                                       ( size )
-    fbc0@@offString                     =                                       ( fbc0@@offString + size + 2 )
-  end struc
+  local fbc0@@lblString, fbc0@@ptrString, fbc0@@lenString
+  local fbc0@@lblCode, fbc0@@lenCode, fbc0@@ptrMain
+  local fbc0@@uf4Token
   macro fbc0@@killMySelf
     purge fbc0@@instruction, fbc0@@operantByte, fbc0@@operantWord, fbc0@@operantDWord, fbc0@@operantQWord, fbc0@@operantString, fbc0@@addString
   end macro
+  macro fbc0@@instruction               opcode*
+    db                                  opcode
+  end macro
+  macro fbc0@@operantByte               value*
+    db                                  value
+  end macro
+  macro fbc0@@operantWord               value*
+    dw                                  value
+  end macro
+  macro fbc0@@operantDWord              value*
+    dd                                  value
+  end macro
+  macro fbc0@@operantQWord              value*
+    dq                                  value
+  end macro
+  macro fbc0@@operantString             string*
+    local char
+    virtual                             at null
+      DB                                string
+      store                             word ( $ )                              at   fbc0@@uf4Token.lblMagic:( fbc0@@lblString + fbc0@@uf4Token.lblContent + fbc0@@ptrString )
+      repeat ( $ ), offs:0
+        load                            char byte                               from ( offs )
+        store                           byte char                               at   fbc0@@uf4Token.lblMagic:( fbc0@@lblString + fbc0@@uf4Token.lblContent + fbc0@@ptrString + 2 + offs )
+      end repeat
+      dq                                ( fbc0@@lblString + fbc0@@ptrString + 2 )
+      fbc0@@ptrString                   =                                       ( fbc0@@ptrString + 2 + $ )
+    end virtual
+  end macro
+  struc fbc0@@getToken
+    .lenString                          =                                       fbc0@@lenString
+  end struc
   import 'fruitbot/assembly'
   match , language
     display '[asm:fbc0] warn: default language is assembler.', 10
   else match =assembler, language
-  else match =yasic, language
+  else match + =yasic, hazYasic language
     display '[asm:fbc0] yet another symbolic instruction code!', 10
-    import 'yasic/main'
-    import 'yasic/operators'
-    import 'yasic/optimise'
-    import 'yasic/queque'
-    import 'yasic/stack'
-    import 'yasic/strings'
-    import 'yasic/types'
-    import 'yasic/variables'
+    yasic@@newSpace
+    macro fbc0@@killMySelf
+      fbc0@@killMySelf
+      yasic@@endSpace
+    end macro
   else
     err 10, '[asm:fbc0] unknown language »', `language, '«'
   end match
+  fbc0@@uf4Token                        uf4@@getLayer
+  fbc0@@ptrString                       =                                       ( null )
+  fbc0@@lblString                       uf4@@allocateLayer                      ( fbc0@@lenString )
+  fbc0@@lblCode                         uf4@@allocateLayer                      ( null )
+  uf4@@newLayer                                                                 ;<code>
+    lbl                                 __main__
+    uf4@@newLayer
+      call                              ( fbc0@@ptrMain + fbc0@@lenString )
+      stop
+    uf4@@endLayer
+  macro end?.code!
+    local temp
+    stop
+    temp                                uf4@@endLayer                           ;</code>
+    fbc0@@lenString                     =                                       ( fbc0@@ptrString )
+    fbc0@@ptrMain                       =                                       ( temp - fbc0@@lenString )
+    fbc0@@killMySelf
+    temp                                uf4@@allocateLayer                      ( null )
+    temp                                =                                       ( temp - fbc0@@lblCode )
+    if ( fbc0@@lenString )
+      uf4@@addYapterD                   fbc0@@yStrings,     null,               fbc0@@lenString,    fbc0@@lblString,    null
+    end if
+    uf4@@addYapterD                     fbc0@@yBytecode,    fbc0@@version,      temp,               fbc0@@ptrMain,      fbc0@@lblCode
+    purge fbc0@@killMySelf, end?.code
+  end macro
 end macro
-macro end?.code!
-  fbc0@@killMySelf
-  purge fbc0@@killMySelf
-  fbc0@@lenString                       =                                       ( fbc0@@offString )
-  if ( fbc0@@lenString > 0 )
-    uf4@@ctrYapter                      =                                       ( uf4@@ctrYapter + 1 )
-    uf4@@addYapter                      fbc0@@yStrings,     fbc0@@lenString,    0,                  0,                  ( fbc0@@string_ptrFile - uf4@@lblYcontent )
-  end if
-  fbc0@@numOpcode                       =                                       ( fbc0@@ctrOpcode )
-  uf4@@ctrYapter                        =                                       ( uf4@@ctrYapter + 1 )
-  uf4@@addYapter                        fbc0@@yBytecode,    fbc0@@numOpcode,    0,                  fbc0@@version,      ( fbc0@@opcode_ptrFile - uf4@@lblYcontent )
-end macro
-fbc0@@yBytecode uf4@@addUnlistedYapterType
 fbc0@@yStrings  uf4@@addUnlistedYapterType
+fbc0@@yBytecode uf4@@addUnlistedYapterType

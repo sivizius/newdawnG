@@ -1,0 +1,50 @@
+include 'include/yasic/main.flibg'
+include 'include/yasic/operators.flibg'
+include 'include/yasic/optimise.flibg'
+include 'include/yasic/queque.flibg'
+include 'include/yasic/stack.flibg'
+include 'include/yasic/strings.flibg'
+include 'include/yasic/types.flibg'
+include 'include/yasic/variables.flibg'
+macro yasic@@newSpace
+  yasic@@ptrQueque                      =                                       null
+  yasic@@endQueque                      =                                       null
+  yasic@@ptrStack                       =                                       null
+  yasic@@topStack                       =                                       null
+  yasic@@ptrStrings                     =                                       null
+  yasic@@endStrings                     =                                       null
+  yasic@@global                         equ                                     +
+  yasic@@idOfType                       =                                       1
+  yasic@@newType                        byte,     __byte__
+  yasic@@newType                        word,     __word__
+  yasic@@newType                        dword,    __dword__
+  yasic@@newType                        qword,    __qword__
+  macro yasic@@endSpace
+    purge byte, word, dword, qword
+    purge yasic@@endSpace
+  end macro
+end macro
+yasic@@lenStack                         =                                       ( 4096 * 16 )
+yasic@@lenQueque                        =                                       ( 4096 * 16 )
+yasic@@lenStrings                       =                                       ( 65536 )
+yasic@@maxNumOfTypes                    =                                       256
+
+virtual                                 at null
+  yasic@@lblStack::
+    rb                                  yasic@@lenStack
+end virtual
+virtual                                 at null
+  yasic@@lblQueque::
+    rb                                  ( yasic@@lenQueque )
+end virtual
+virtual                                 at null
+  yasic@@lblStrings::
+    rb                                  ( yasic@@lenStrings )
+end virtual
+virtual                                 at null
+  yasic@@lblTypes::
+    rw                                  ( yasic@@maxNumOfTypes )
+end virtual
+
+hazYasic                                equ                                       +
+

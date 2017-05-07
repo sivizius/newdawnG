@@ -2,6 +2,7 @@ macro format@@addFormat               format@@name*,                          fo
   format@@lstFormat                   equ                                     format@@name,       format@@func,       format@@stop
 end macro
 macro format                          format@@name*,                          format@@args&
+  display 'format: ', `format@@name, 10
   macro import                        module
     eval                              'include ', "'include/", module, ".flibg'"
   end macro
@@ -15,10 +16,10 @@ macro format                          format@@name*,                          fo
       end match
     end match
   end irpv
-end macro
-macro end?.format!
-  format@@theFinal
-  purge import
+  macro end?.format!
+    format@@theFinal
+    purge import
+  end macro
 end macro
 
 ;( some formats )

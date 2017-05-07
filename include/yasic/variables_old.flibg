@@ -1,3 +1,18 @@
+;    local lstExpression, charExpression, restExpression, temp
+;    define                              lstExpression                           theExpression
+;    while 1
+;      match charExpression restExpression, lstExpression
+;        define                          lstExpression                           restExpression
+;        yasic@@parseChar                charExpression
+;      else
+;        match any, lstExpression
+;          yasic@@parseChar              any
+;        end match
+;        break
+;      end match
+;    end while
+macro yasic@@lstFunctions
+end macro
 macro yasic@@ctrLocalVariables
 end macro
 macro yasic@@numLocalVariables
@@ -32,6 +47,9 @@ macro yasic@@newType                    theType*,                               
     local varName, anExpression
     local aParameter, restParameters, theParameters, lstParameters
     local type, parameter, default, hazDefault
+    local content
+    macro content
+    end macro
     match                               varName =( theParameters =),            declaration                   ;<function>
       match                             +,                                      yasic@@global
         macro varName                   arguments&
@@ -69,7 +87,7 @@ macro yasic@@newType                    theType*,                               
               end match
             end irpv
           end match
-          call                          yasic@@#varName#_address
+          call                          varName
         end macro
         ;( parse parameters )
         define                          lstParameters                           theParameters
@@ -103,7 +121,7 @@ macro yasic@@newType                    theType*,                               
             else match                  parameter == default,                   aParameter
               define                    hazDefault                              true
               yasic@@#varName#_params   equ                                     void, parameter, default
-            else match                  type parameter,                         aParameter
+           else match                  type parameter,                         aParameter
               match                     =false,                                 hazDefault
                 yasic@@#varName#_params equ                                     type, parameter
               else
@@ -119,31 +137,48 @@ macro yasic@@newType                    theType*,                               
             break
           end match
         end while
-        macro end?.theType!
-          local temp
-          stop
-          display '}', 10
-          yasic@@numLocalVariables
-          yasic@@global                 equ                                     +
-          temp                          uf4@@endLayer                           ;</function>
-          yasic@@#varName#_address      =                                       ( temp )
-          yasic@@#varName#_lenght       =                                       ( temp.size )
-          purge end?.theType
+        ;( display parameters )
+;        irpv                            item,                                   yasic@@#varName#_params
+;          match                         any =, parameter =, default,            item
+;            display `parameter, ' = ', `default, 10
+;          else match                    any =, parameter,                       item
+;            display `parameter, 10
+;          end match
+;        end irpv
+        macro yasic@@killLocalStuff
         end macro
-        uf4@@newLayer                                                           ;<function>
         yasic@@global                   equ                                     -
-        lbl                             varName
-        yasic@@ctrLocalVariables
-        display `theType, ' = function ', `varName, ' ( ', `theParameters, ' ):', 10
-        display '{', 10
-      else match                        ==,                                     yasic@@global
-        err 10, '[asm:yasic] oop is not implemented yet'
+        macro end?.#theType!
+          yasic@@numLocalVariables
+          ;<.size                         =                                       ( fbc0@@ctrOpcode - .address )>
+          display '}', 10
+          esc end macro
+          yasic@@killLocalStuff
+          purge                         yasic@@killLocalStuff
+          purge                         end.#theType
+        end macro
+        macro yasic@@lstFunctions
+          yasic@@lstFunctions
+          varName#@@definition
+        end macro
+        macro content
+          esc macro varName#@@definition
+          ;<@#varName#:>
+          ;<.address                      =                                       ( fbc0@@ctrOpcode )>
+          lbl varName
+          yasic@@ctrLocalVariables
+          allocate
+          display `theType, ': function ', `varName, ' ( ', `theParameters, ' ):', 10
+          ;displayValue '  addr = 0x', .address
+          ;displayValue '  size = 0x', .size
+          display '{', 10
+        end macro
       else
-        err 10, '[asm:yasic] declaration of function inside another function is not allowed'
+        err 10, '[asm:yasic] declaration of function must be in global environment'
       end match
     else match                          varName == anExpression,                declaration                   ;<variables>
       match                             +,                                      yasic@@global
-        display 'global  ', `theType, ' ', `varName, ' = ', `anExpression, ';', 10
+        display 'global:  ', `theType, ': ', `varName, ' = ', `anExpression, ';', 10
         macro varName                   value*
           local expression
           match                         == expression,                          value
@@ -154,18 +189,21 @@ macro yasic@@newType                    theType*,                               
             err 10, '[asm:yasic] invalid assign'
           end match
         end macro
-      else
-        display '  local ', `theType, ' ', `varName, ' = ', `anExpression, ';', 10
+      else match                        -,                                      yasic@@global
+        display '  local: ', `theType, ': ', `varName, ' = ', `anExpression, ';', 10
+        displayValue '  ctr 0x', .#theType#_ctrVars
+    ;displayValue 'num data 0x', .qword_ctrData
         .var#varName#_value             =                                       ( .#theType#_ctrVars )
         .#theType#_ctrVars              =                                       ( .#theType#_ctrVars + 1 )
+        ;displayValue 'base: 0x', .
         macro varName                   value*
           local expression
           match                         == expression,                          value
             display '  let ', `varName, ' equal to »', `expression, '«', 10
-            display '  '
             yasic@@parseExpression      expression
             yasic@@displayExpression
             yasic@@compileExpression
+            display 10
             pushConstant                yasic@@#theType#_theID
             pushConstant                .var#varName#_value
             let
@@ -175,7 +213,12 @@ macro yasic@@newType                    theType*,                               
             err 10, '[asm:yasic] invalid assign'
           end match
         end macro
+        macro yasic@@killLocalStuff
+          yasic@@killLocalStuff
+          purge varName
+        end macro
       end match
     end match
+    content
   end macro
 end macro

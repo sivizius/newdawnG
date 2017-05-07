@@ -1,15 +1,7 @@
-yasic@@ptrStrings                       =                                       null
-yasic@@endStrings                       =                                       null
-yasic@@lenStrings                       =                                       ( 65536 )
-virtual                                 at null
-  yasic@@lblStrings::
-    rb                                  ( yasic@@lenStrings )
-end virtual
-
 struc yasic@@newString                  string*
   local size, char
   virtual                               at null
-    db string
+    DB string
     size                                =                                       ( $ )
     repeat ( size )
       load                              char byte                               from ( % - 1 )

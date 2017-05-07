@@ -1,0 +1,69 @@
+;    local lstExpression, charExpression, restExpression, temp
+;    define                              lstExpression                           theExpression
+;    while 1
+;      match charExpression restExpression, lstExpression
+;        define                          lstExpression                           restExpression
+;        yasic@@parseChar                charExpression
+;      else
+;        match any, lstExpression
+;          yasic@@parseChar              any
+;        end match
+;        break
+;      end match
+;    end while
+macro pushExpression                    expression*
+  yasic@@parseExpression                expression
+  yasic@@displayExpression
+  yasic@@optimiseExpression
+  yasic@@displayExpression
+  yasic@@compileExpression
+end macro
+macro yasic@@newType                    theType*,                               theSize*
+  macro theType                         declaration&
+    match                               varName =( theParameters =),            declaration                   ;<function>
+    else match                          varName == anExpression,                declaration                   ;<variables>
+      match                             +,                                      yasic@@global
+        display 'global:  ', `theType, ': ', `varName, ' = ', `anExpression, ';', 10
+        macro varName                   value*
+          local expression
+          match                         == expression,                          value
+            display 'let ', `varName, ' equal to ', `expression, 10
+          else match                    +== expression,                         value
+            display 'let ', `varName, ' equal to ', `varName, ' + ( ', `expression, ' )', 10
+           else
+            err 10, '[asm:yasic] invalid assign'
+          end match
+        end macro
+      else match                        -,                                      yasic@@global
+        display '  local: ', `theType, ': ', `varName, ' = ', `anExpression, ';', 10
+        displayValue '  ctr 0x', .#theType#_ctrVars
+    ;displayValue 'num data 0x', .qword_ctrData
+        .var#varName#_value             =                                       ( .#theType#_ctrVars )
+        .#theType#_ctrVars              =                                       ( .#theType#_ctrVars + 1 )
+        ;displayValue 'base: 0x', .
+        macro varName                   value*
+          local expression
+          match                         == expression,                          value
+            display '  let ', `varName, ' equal to »', `expression, '«', 10
+            yasic@@parseExpression      expression
+            yasic@@displayExpression
+            yasic@@compileExpression
+            display 10
+            pushConstant                yasic@@#theType#_theID
+            pushConstant                .var#varName#_value
+            let
+          else match                    +== expression,                         value
+            display '  let ', `varName, ' equal to ', `varName, ' + ( ', `expression, ' )', 10
+          else
+            err 10, '[asm:yasic] invalid assign'
+          end match
+        end macro
+        macro yasic@@killLocalStuff
+          yasic@@killLocalStuff
+          purge varName
+        end macro
+      end match
+    end match
+    content
+  end macro
+end macro

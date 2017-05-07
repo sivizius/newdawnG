@@ -1,6 +1,6 @@
 macro yasic@@parseChar                  char&
   local stack0, stack1
-  display `char, 10
+;  display `char, 10
   if ( yasic@@expectOperant )
     if 0                                                                                            ;precedence
     else if ( `char = 'not' )
@@ -233,7 +233,6 @@ macro yasic@@parseExpression            theExpression&
 end macro
 
 macro yasic@@displayExpression
-  display 10
   local temp
   yasic@@ptrQueque                      =                                       null
   while ( yasic@@ptrQueque < yasic@@endQueque )
@@ -276,6 +275,7 @@ macro yasic@@displayExpression
       display '«)'
     end if
   end while
+  display 10
 end macro
 macro yasic@@compileExpression
   local temp
@@ -285,19 +285,11 @@ macro yasic@@compileExpression
     if      ( temp.type = yasic@@tOperator )
       yasic@@opCompile                  temp.value
     else if ((( temp.type >= yasic@@tConstByte ) & ( temp.type <= yasic@@tConstQWord )) | temp.type <= yasic@@tConstant )
-      pushConstant                      temp.value
+      pushConstant                      ( temp.value + 0 )
     else if ( temp.type = yasic@@tParentheses )
       err 10, '[asm:yasic] missing closing parenthesis'
     else
       err 10, '[asm:yasic] cannot compile this'
     end if
   end while
-end macro
-
-macro fbc0@@killMySelf
-  stop
-  ;display 10, 'list of functions:', 10
-  yasic@@global                         equ                                     -
-  yasic@@lstFunctions
-  fbc0@@killMySelf
 end macro

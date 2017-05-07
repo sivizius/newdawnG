@@ -1,0 +1,16 @@
+macro syntax theSyntax
+  macro ?! line&
+    if ( `line = 'end syntax' )
+      purge ?
+    else
+      display 'parse »', `line, '«', 10
+    end if
+  end macro
+end macro
+
+
+syntax hello
+  123
+  abc
+  def
+end syntax

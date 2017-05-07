@@ -1,0 +1,181 @@
+macro displayIndent                     depth
+  repeat ( depth )
+    display '  '
+  end repeat
+end macro
+macro displayHexQWord                   value*
+  local                                 char
+  repeat 16
+    char                                =                                       ( '0' + ((( value ) shr ( 64 - ( % * 4 ))) and 0x0f ))
+    if ( char > '9' )
+      char                              =                                       ( char + 'a' - '9' - 1 )
+    end if
+    display                             char
+  end repeat
+end macro
+macro displayHexDWord                   value*
+  local                                 char
+  repeat 8
+    char                                =                                       ( '0' + ((( value ) shr ( 32 - ( % * 4 ))) and 0x0f ))
+    if ( char > '9' )
+      char                              =                                       ( char + 'a' - '9' - 1 )
+    end if
+    display                             char
+  end repeat
+end macro
+macro displayHexWord                    value*
+  local                                 char
+  repeat 4
+    char                                =                                       ( '0' + ((( value ) shr ( 16 - ( % * 4 ))) and 0x0f ))
+    if ( char > '9' )
+      char                              =                                       ( char + 'a' - '9' - 1 )
+    end if
+    display                             char
+  end repeat
+end macro
+macro displayHexByte                    value*
+  local                                 char
+  repeat 2
+    char                                =                                       ( '0' + ((( value ) shr (  8 - ( % * 4 ))) and 0x0f ))
+    if ( char > '9' )
+      char                              =                                       ( char + 'a' - '9' - 1 )
+    end if
+    display                             char
+  end repeat
+end macro
+macro displayValue                      string*,                                value*
+  displayIndent                         depth
+  display string
+  displayHexQWord value
+  display 10
+end macro
+depth                                   =                                       0
+yasicCode@@lenStack                     =                                       128
+macro yasicCode
+  local yasicCode@@lblStack, yasicCode@@ptrStack
+  local yasicCode@@lblLayer, yasicCode@@ptrLayer, yasicCode@@lenLayer
+  local yasicCode@@lblOutput, yasicCode@@ptrOutput, yasicCode@@lenOutput
+  virtual                               at 0
+    yasicCode@@lblStack::
+      rq                                yasicCode@@lenStack                     ;offset
+      rq                                yasicCode@@lenStack                     ;lenght
+  end virtual
+  yasicCode@@ptrStack                   =                                       ( 0 )
+  yasicCode@@lblOutput::
+    rq                                  yasicCode@@lenOutput
+  yasicCode@@ptrOutput                  =                                       ( 0 )
+  yasicCode@@ptrLayer                   =                                       ( 0 )
+  yasicCode@@lenLayer                   =                                       ( 0 )
+  macro db                              data&
+    local char
+    virtual                             at 0
+      DB                                data
+      displayValue 'offset: 0x', ( yasicCode@@ptrLayer + yasicCode@@lenLayer )
+      displayValue 'lenght: 0x', ( $ )
+      repeat ( $ )
+        load                            char byte                               from ( % - 1 )
+        store                           byte char                               at   yasicCode@@lblLayer:( yasicCode@@ptrLayer + yasicCode@@lenLayer + % - 1 )
+      end repeat
+      yasicCode@@lenLayer               =                                       ( yasicCode@@lenLayer + $ )
+    end virtual
+  end macro
+  macro dw                              data&
+    local char
+    virtual                             at 0
+      DW                                data
+      displayValue 'offset: 0x', ( yasicCode@@ptrLayer + yasicCode@@lenLayer )
+      displayValue 'lenght: 0x', ( $ )
+      repeat ( $ )
+        load                            char byte                               from ( % - 1 )
+        store                           byte char                               at   yasicCode@@lblLayer:( yasicCode@@ptrLayer + yasicCode@@lenLayer + % - 1 )
+      end repeat
+      yasicCode@@lenLayer               =                                       ( yasicCode@@lenLayer + $ )
+    end virtual
+  end macro
+  macro dd                              data&
+    local char
+    virtual                             at 0
+      DD                                data
+      displayValue 'offset: 0x', ( yasicCode@@ptrLayer + yasicCode@@lenLayer )
+      displayValue 'lenght: 0x', ( $ )
+      repeat ( $ )
+        load                            char byte                               from ( % - 1 )
+        store                           byte char                               at   yasicCode@@lblLayer:( yasicCode@@ptrLayer + yasicCode@@lenLayer + % - 1 )
+      end repeat
+      yasicCode@@lenLayer               =                                       ( yasicCode@@lenLayer + $ )
+    end virtual
+  end macro
+  macro dq                              data&
+    local char
+    virtual                             at 0
+      DQ                                data
+      displayValue 'offset: 0x', ( yasicCode@@ptrLayer + yasicCode@@lenLayer )
+      displayValue 'lenght: 0x', ( $ )
+      repeat ( $ )
+        load                            char byte                               from ( % - 1 )
+        store                           byte char                               at   yasicCode@@lblLayer:( yasicCode@@ptrLayer + yasicCode@@lenLayer + % - 1 )
+      end repeat
+      yasicCode@@lenLayer               =                                       ( yasicCode@@lenLayer + $ )
+    end virtual
+  end macro
+  macro function
+    displayValue 'push ptr 0x', yasicCode@@ptrLayer
+    displayValue 'push len 0x', yasicCode@@lenLayer
+    depth = depth + 1
+    store                               qword yasicCode@@ptrLayer               at   yasicCode@@lblStack:( yasicCode@@ptrStack + 0 )
+    yasicCode@@ptrLayer                 =                                       ( yasicCode@@ptrLayer + yasicCode@@lenLayer )
+    store                               qword yasicCode@@lenLayer               at   yasicCode@@lblStack:( yasicCode@@ptrStack + 8 )
+    yasicCode@@lenLayer                 =                                       ( 0 )
+    yasicCode@@ptrStack                 =                                       ( yasicCode@@ptrStack + 16 )
+    if ( yasicCode@@ptrStack >= yasicCode@@ptrStack * 16 )
+      err 10, '[asm:yasicCode] stackoverflow'
+    end if
+    macro end?.function!
+      displayValue 'copy from  0x', yasicCode@@ptrLayer
+      displayValue 'some bytes 0x', yasicCode@@lenLayer
+      repeat ( yasicCode@@lenLayer )
+        load                            char byte                               from ( yasicCode@@ptrLayer + % - 1 )
+        store                           byte char                               at   yasicCode@@lblOutput:( yasicCode@@ptrOutput + % - 1 )
+      end repeat
+      yasicCode@@ptrOutput              =                                       ( yasicCode@@ptrOutput + yasicCode@@lenLayer )
+      if ( yasicCode@@ptrStack <= 0 )
+        err 10, '[asm:yasicCode] stackunderflow'
+      end if
+      yasicCode@@ptrStack               =                                       ( yasicCode@@ptrStack - 16 )
+      load                              yasicCode@@ptrLayer qword               from yasicCode@@lblStack:( yasicCode@@ptrStack + 0 )
+      load                              yasicCode@@lenLayer qword               from yasicCode@@lblStack:( yasicCode@@ptrStack + 8 )
+      depth = depth - 1
+      displayValue 'pop ptr 0x', yasicCode@@ptrLayer
+      displayValue 'pop len 0x', yasicCode@@lenLayer
+    end macro
+  end macro
+  macro end?.yasicCode!
+      displayValue 'copy from  0x', yasicCode@@ptrLayer
+      displayValue 'some bytes 0x', yasicCode@@lenLayer
+      repeat ( yasicCode@@lenLayer )
+        load                            char byte                               from ( yasicCode@@ptrLayer + % - 1 )
+        store                           byte char                               at   yasicCode@@lblOutput:( yasicCode@@ptrOutput + % - 1 )
+      end repeat
+      yasicCode@@ptrOutput              =                                       ( yasicCode@@ptrOutput + yasicCode@@lenLayer )
+    end virtual
+    yasicCode@@lenOutput                =                                       yasicCode@@ptrOutput
+    purge end?.yasicCode
+    purge db, dw, dd, dq
+  end macro
+  virtual                               at 0
+    yasicCode@@lblLayer::
+      rb                                ( 4096 * 4096 )
+end macro
+
+yasicCode
+  db 'yasicCode'
+  function
+    db 'hello '
+    function
+      db '123'
+    end function
+    db 'world!'
+  end function
+  db '/yasicCode'
+end yasicCode
+

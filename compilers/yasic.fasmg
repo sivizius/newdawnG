@@ -1,7 +1,8 @@
 include 'include/main.flibg'
 include 'include/format.flibg'
+include 'include/yasic.flibg'
 
-format uf4
+format                                  uf4,                              128,                                    ( 4096 * 4096 )
   import 'display'
   match =0, yasic@@theFruitbotCodeVersion
     import 'fruitbot/version_0'

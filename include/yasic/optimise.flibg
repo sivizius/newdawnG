@@ -145,3 +145,7 @@ macro yasic@@optimiseExpression
   yasic@@topStack                       =                                       null
   yasic@@unstackToQueque
 end macro
+macro yasic@@killOptimiser
+  purge yasic@@optimisePrefixNegative, yasic@@optimiseAdd, yasic@@optimiseSub, yasic@@optimiseMul
+  purge yasic@@optimiseExpression, yasic@@optimiseConnectStrings
+end macro

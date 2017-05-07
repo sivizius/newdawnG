@@ -1,3 +1,5 @@
+pushConstant ( 0x23 )
+
 qword hello( qword arg1, arg2, arg3, arg4 = 444 )
   pushConstant ( 0x66 )
   qword a = 1
@@ -5,7 +7,6 @@ qword hello( qword arg1, arg2, arg3, arg4 = 444 )
   a = 5
 end qword
 
-pushConstant ( 0x23 )
 pushConstant ( 0x1337 )
 add ()
 

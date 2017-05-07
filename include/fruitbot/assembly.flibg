@@ -17,13 +17,45 @@
   fbc0@@opLbl                           =                                       0xfe
   fbc0@@opStop                          =                                       0xff
 ;}
-macro fbc0@@disassemble                 context*, address*, size*
+macro fbc0@@disassemble                 context*, address*, size*, main*
   local pointer, instruction, temp, lenght, char
+  local previousInstruction, previousValue
   pointer                               =                                       null
   while ( pointer < size )
     load                                instruction byte                        from context#:( address + pointer )
+    if ( pointer = main )
+      db '->'
+    else
+      db '  '
+    end if
+    db '0x'
+    hw pointer
+    db ' '
     pointer                             =                                       ( pointer + 1 )
-    db '  '
+    if ( instruction = fbc0@@opLbl )
+      load                              temp qword                              from context#:( address + pointer )
+      pointer                           =                                       ( pointer + 8 )
+      if      ( disasm@@ptrStringYapter = null )
+        err 10, '[fbc] there is no string-yapter'
+        break
+      else if (( temp < 2 ) | (( disasm@@lenStringYapter - temp ) < 0 ))
+        err 10, '[fbc] pointer out of bonds'
+        break
+      else
+        load                            lenght word                             from context#:( disasm@@ptrStringYapter + temp - 2 )
+        if (( disasm@@lenStringYapter - temp ) < lenght )
+          err 10, '[fbc] corrupted string'
+          break
+        end if
+        repeat ( lenght )
+          load                          char byte                               from context#:( disasm@@ptrStringYapter + temp + % - 1 )
+          db char
+        end repeat
+        db ':'
+      end if
+    else
+      db '  '
+    end if
     if false
     else if ( instruction = fbc0@@opPushByte )
       load                              temp byte                               from context#:( address + pointer )
@@ -61,30 +93,35 @@ macro fbc0@@disassemble                 context*, address*, size*
       db 'stop'
     else if ( instruction = fbc0@@opCall )
       db 'call'
-    else if ( instruction = fbc0@@opLbl )
-      db '*0x'
-      hq ( pointer - 1 )
-      db ' '
-      load                              temp qword                              from context#:( address + pointer )
-      pointer                           =                                       ( pointer + 8 )
-      if      ( disasm@@ptrStringYapter = null )
-        err 10, '[fbc] there is no string-yapter'
-        break
-      else if (( temp < 2 ) | (( disasm@@lenStringYapter - temp ) < 0 ))
-        err 10, '[fbc] pointer out of bonds'
-        break
-      else
-        load                            lenght word                             from context#:( disasm@@ptrStringYapter + temp - 2 )
-        if (( disasm@@lenStringYapter - temp ) < lenght )
-          err 10, '[fbc] corrupted string'
-          break
+      if (( previousInstruction = fbc0@@opPushByte  ) | \
+          ( previousInstruction = fbc0@@opPushWord  ) | \
+          ( previousInstruction = fbc0@@opPushDWord ) | \
+          ( previousInstruction = fbc0@@opPushQWord ))
+        load                            temp byte                               from context#:( address + previousValue )
+        if ( temp = fbc0@@opLbl )
+          load                          temp qword                              from context#:( address + previousValue + 1 )
+          if      ( disasm@@ptrStringYapter = null )
+            err 10, '[fbc] there is no string-yapter'
+            break
+          else if (( temp < 2 ) | (( disasm@@lenStringYapter - temp ) < 0 ))
+            err 10, '[fbc] pointer out of bonds'
+            break
+          else
+            load                        lenght word                             from context#:( disasm@@ptrStringYapter + temp - 2 )
+            if (( disasm@@lenStringYapter - temp ) < lenght )
+              err 10, '[fbc] corrupted string'
+              break
+            end if
+            db ' »'
+            repeat ( lenght )
+              load                      char byte                               from context#:( disasm@@ptrStringYapter + temp + % - 1 )
+              db char
+            end repeat
+            db '«'
+          end if
         end if
-        repeat ( lenght )
-          load                          char byte                               from context#:( disasm@@ptrStringYapter + temp + % - 1 )
-          db char
-        end repeat
-        db ':'
       end if
+    else if ( instruction = fbc0@@opLbl )
     else if ( instruction = fbc0@@opAllocGlobal )
       db 'allocGlobal'
     else if ( instruction = fbc0@@opAllocLocal )
@@ -96,27 +133,34 @@ macro fbc0@@disassemble                 context*, address*, size*
       hb instruction
       db '>'
     end if
+    previousValue                       =                                       temp
+    previousInstruction                 =                                       instruction
     db 10
   end while
   display 'done', 10
 end macro
 macro pushByte                          value*
+  ;displayValue 'pushByte 0x', value
   fbc0@@instruction                     fbc0@@opPushByte
   fbc0@@operantByte                     value
 end macro
 macro pushWord                          value*
+  ;displayValue 'pushWord 0x', value
   fbc0@@instruction                     fbc0@@opPushWord
   fbc0@@operantWord                     value
 end macro
 macro pushDWord                         value*
+  ;displayValue 'pushDWord 0x', value
   fbc0@@instruction                     fbc0@@opPushDWord
   fbc0@@operantDWord                    value
 end macro
 macro pushQWord                         value*
+  ;displayValue 'pushQWord 0x', value
   fbc0@@instruction                     fbc0@@opPushQWord
   fbc0@@operantQWord                    value
 end macro
 macro pushConstant                      value*
+  ;displayValue 'pushConstant 0x', value
   if      (( value >= -( 1 shl  7 )) & ( value < ( 1 shl  7 )))
     pushByte                            value
   else if (( value >= -( 1 shl 15 )) & ( value < ( 1 shl 15 )))
@@ -148,8 +192,10 @@ end macro
 macro stop                              ignore
   fbc0@@instruction                     fbc0@@opStop
 end macro
-macro call                              varName
-  pushConstant                          ( @#varName#.address )
+macro call                              address*
+  local temp
+  temp                                  fbc0@@getToken
+  pushConstant                          ( address - temp.lenString )
   fbc0@@instruction                     fbc0@@opCall
 end macro
 macro allocGlobal                       ignore
