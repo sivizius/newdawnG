@@ -1,5 +1,3 @@
-pushConstant ( 0x23 )
-
 qword hello( qword arg1, arg2, arg3, arg4 = 444 )
   pushConstant ( 0x66 )
   qword a = 1
@@ -7,7 +5,15 @@ qword hello( qword arg1, arg2, arg3, arg4 = 444 )
   a = 5
 end qword
 
-pushConstant ( 0x1337 )
+pushConstant ( 0x3e3c )
+pushConstant ( 0x3e3c )
 add ()
 
 hello ((1+2),(3*4),(5/(7-6)))
+
+while 5+2
+  pushConstant ( 1 )
+  if 1
+    add ()
+  end if
+end while

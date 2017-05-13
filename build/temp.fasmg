@@ -1,2 +1,2 @@
-disasm@@theInputFile equ 'final/test.uf4'
-include 'compilers/disassembler.fasmg'
+compile@@theInputFile equ 'final/test.uf4'
+include 'compilers/linux-amd64.fasmg'

@@ -11,39 +11,39 @@
 ;        break
 ;      end match
 ;    end while
-macro pushExpression                    expression*
+Macro pushExpression                    expression*
   yasic@@parseExpression                expression
   yasic@@displayExpression
   yasic@@optimiseExpression
   yasic@@displayExpression
   yasic@@compileExpression
-end macro
-macro yasic@@newType                    theType*,                               theSize*
-  macro theType                         declaration&
-    match                               varName =( theParameters =),            declaration                   ;<function>
-    else match                          varName == anExpression,                declaration                   ;<variables>
-      match                             +,                                      yasic@@global
+End Macro
+Macro yasic@@newType                    theType*,                               theSize*
+  Macro theType                         declaration&
+    Match                               varName =( theParameters =),            declaration                   ;<function>
+    Else Match                          varName == anExpression,                declaration                   ;<variables>
+      Match                             +,                                      yasic@@global
         display 'global:  ', `theType, ': ', `varName, ' = ', `anExpression, ';', 10
-        macro varName                   value*
-          local expression
-          match                         == expression,                          value
+        Macro varName                   value*
+          Local expression
+          Match                         == expression,                          value
             display 'let ', `varName, ' equal to ', `expression, 10
-          else match                    +== expression,                         value
+          Else Match                    +== expression,                         value
             display 'let ', `varName, ' equal to ', `varName, ' + ( ', `expression, ' )', 10
-           else
+           Else
             err 10, '[asm:yasic] invalid assign'
-          end match
-        end macro
-      else match                        -,                                      yasic@@global
+          End Match
+        End Macro
+      Else Match                        -,                                      yasic@@global
         display '  local: ', `theType, ': ', `varName, ' = ', `anExpression, ';', 10
         displayValue '  ctr 0x', .#theType#_ctrVars
     ;displayValue 'num data 0x', .qword_ctrData
         .var#varName#_value             =                                       ( .#theType#_ctrVars )
         .#theType#_ctrVars              =                                       ( .#theType#_ctrVars + 1 )
         ;displayValue 'base: 0x', .
-        macro varName                   value*
-          local expression
-          match                         == expression,                          value
+        Macro varName                   value*
+          Local expression
+          Match                         == expression,                          value
             display '  let ', `varName, ' equal to »', `expression, '«', 10
             yasic@@parseExpression      expression
             yasic@@displayExpression
@@ -52,18 +52,19 @@ macro yasic@@newType                    theType*,                               
             pushConstant                yasic@@#theType#_theID
             pushConstant                .var#varName#_value
             let
-          else match                    +== expression,                         value
+          Else Match                    +== expression,                         value
             display '  let ', `varName, ' equal to ', `varName, ' + ( ', `expression, ' )', 10
-          else
+          Else
             err 10, '[asm:yasic] invalid assign'
-          end match
-        end macro
-        macro yasic@@killLocalStuff
+          End Match
+        End Macro
+        Macro yasic@@killLocalStuff
           yasic@@killLocalStuff
-          purge varName
-        end macro
-      end match
-    end match
+          Purge varName
+        End Macro
+      End Match
+    End Match
     content
-  end macro
-end macro
+  End Macro
+End Macro
+

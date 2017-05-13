@@ -1,0 +1,16 @@
+macro if cond
+  display cond, 10
+  display '{', 10
+  macro end?.if!
+    display '}', 10
+    purge end?.if
+  end macro
+end macro
+
+if 'hello '
+  display 'world', 10
+end if
+
+IF 1 = 0
+  display 'hello world!', 10
+END IF

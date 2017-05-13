@@ -16,58 +16,58 @@ fbc0@@version                           =                                       
   fbc0@@tStack                          =                                       0x0c                                    ;value is in the stack
   fbc0@@tUnknown                        =                                       0xff                                    ;unknown operant, should cause an fatal error!
 ;}
-macro code                              language
-  local fbc0@@lblString, fbc0@@ptrString, fbc0@@lenString
-  local fbc0@@lblCode, fbc0@@lenCode, fbc0@@ptrMain
-  local fbc0@@uf4Token
-  macro fbc0@@killMySelf
-    purge fbc0@@instruction, fbc0@@operantByte, fbc0@@operantWord, fbc0@@operantDWord, fbc0@@operantQWord, fbc0@@operantString, fbc0@@addString
-  end macro
-  macro fbc0@@instruction               opcode*
+Macro code                              language
+  Local fbc0@@lblString, fbc0@@ptrString, fbc0@@lenString
+  Local fbc0@@lblCode, fbc0@@lenCode, fbc0@@ptrMain
+  Local fbc0@@uf4Token
+  Macro fbc0@@killMySelf
+    Purge fbc0@@instruction, fbc0@@operantByte, fbc0@@operantWord, fbc0@@operantDWord, fbc0@@operantQWord, fbc0@@operantString, fbc0@@addString
+  End Macro
+  Macro fbc0@@instruction               opcode*
     db                                  opcode
-  end macro
-  macro fbc0@@operantByte               value*
+  End Macro
+  Macro fbc0@@operantByte               value*
     db                                  value
-  end macro
-  macro fbc0@@operantWord               value*
+  End Macro
+  Macro fbc0@@operantWord               value*
     dw                                  value
-  end macro
-  macro fbc0@@operantDWord              value*
+  End Macro
+  Macro fbc0@@operantDWord              value*
     dd                                  value
-  end macro
-  macro fbc0@@operantQWord              value*
+  End Macro
+  Macro fbc0@@operantQWord              value*
     dq                                  value
-  end macro
-  macro fbc0@@operantString             string*
-    local char
-    virtual                             at null
+  End Macro
+  Macro fbc0@@operantString             string*
+    Local char
+    Virtual                             At null
       DB                                string
-      store                             word ( $ )                              at   fbc0@@uf4Token.lblMagic:( fbc0@@lblString + fbc0@@uf4Token.lblContent + fbc0@@ptrString )
-      repeat ( $ ), offs:0
-        load                            char byte                               from ( offs )
-        store                           byte char                               at   fbc0@@uf4Token.lblMagic:( fbc0@@lblString + fbc0@@uf4Token.lblContent + fbc0@@ptrString + 2 + offs )
-      end repeat
+      Store                             word ( $ )                              At   fbc0@@uf4Token.lblMagic:( fbc0@@lblString + fbc0@@uf4Token.lblContent + fbc0@@ptrString )
+      Repeat ( $ ), offs:0
+        Load                            char byte                               from ( offs )
+        Store                           byte char                               At   fbc0@@uf4Token.lblMagic:( fbc0@@lblString + fbc0@@uf4Token.lblContent + fbc0@@ptrString + 2 + offs )
+      End Repeat
       dq                                ( fbc0@@lblString + fbc0@@ptrString + 2 )
       fbc0@@ptrString                   =                                       ( fbc0@@ptrString + 2 + $ )
-    end virtual
-  end macro
-  struc fbc0@@getToken
+    End Virtual
+  End Macro
+  Struc fbc0@@getToken
     .lenString                          =                                       fbc0@@lenString
-  end struc
+  End Struc
   import 'fruitbot/assembly'
-  match , language
+  Match , language
     display '[asm:fbc0] warn: default language is assembler.', 10
-  else match =assembler, language
-  else match + =yasic, hazYasic language
+  Else Match =assembler, language
+  Else Match + =yasic, hazYasic language
     display '[asm:fbc0] yet another symbolic instruction code!', 10
     yasic@@newSpace
-    macro fbc0@@killMySelf
+    Macro fbc0@@killMySelf
       fbc0@@killMySelf
       yasic@@endSpace
-    end macro
-  else
+    End Macro
+  Else
     err 10, '[asm:fbc0] unknown language »', `language, '«'
-  end match
+  End Match
   fbc0@@uf4Token                        uf4@@getLayer
   fbc0@@ptrString                       =                                       ( null )
   fbc0@@lblString                       uf4@@allocateLayer                      ( fbc0@@lenString )
@@ -78,8 +78,8 @@ macro code                              language
       call                              ( fbc0@@ptrMain + fbc0@@lenString )
       stop
     uf4@@endLayer
-  macro end?.code!
-    local temp
+  Macro end?.code!
+    Local temp
     stop
     temp                                uf4@@endLayer                           ;</code>
     fbc0@@lenString                     =                                       ( fbc0@@ptrString )
@@ -87,12 +87,13 @@ macro code                              language
     fbc0@@killMySelf
     temp                                uf4@@allocateLayer                      ( null )
     temp                                =                                       ( temp - fbc0@@lblCode )
-    if ( fbc0@@lenString )
+    If ( fbc0@@lenString )
       uf4@@addYapterD                   fbc0@@yStrings,     null,               fbc0@@lenString,    fbc0@@lblString,    null
-    end if
+    End If
     uf4@@addYapterD                     fbc0@@yBytecode,    fbc0@@version,      temp,               fbc0@@ptrMain,      fbc0@@lblCode
-    purge fbc0@@killMySelf, end?.code
-  end macro
-end macro
+    Purge fbc0@@killMySelf, end?.code
+  End Macro
+End Macro
 fbc0@@yStrings  uf4@@addUnlistedYapterType
 fbc0@@yBytecode uf4@@addUnlistedYapterType
+

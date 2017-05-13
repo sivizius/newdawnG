@@ -1,6 +1,6 @@
 null                                    =                                       ( 0 )
-false                                   equ                                     ( 0 )
-true                                    equ                                     ( 1 )
+false                                   Equ                                     ( 0 )
+true                                    Equ                                     ( 1 )
 nil                                     =                                       (( 1 shl 63 ) - 1 + ( 1 shl 63 ))
 NANOSECONDS                             =                                       ( 1 )
 MICROSECONDS                            =                                       ( 1000 * NANOSECONDS )
@@ -14,92 +14,100 @@ __word__                                =                                       
 __dword__                               =                                       ( 4 )
 __qword__                               =                                       ( 8 )
 
-macro __pad__                           size*,                                  mode:0
-  local k
+Macro __pad__                           size*,                                  mode:0
+  Local k
   k                                     =                                       ((( $ + size - 1 ) and ( 0 - size )) - $ )
-  if ( mode = 0 )
-    while ( k )
+  If ( mode = 0 )
+    While ( k )
       tmp                               __random__
-      if      ( k >= __qword__ )
+      If      ( k >= __qword__ )
         k                               =                                       ( k - __qword__ )
         dq                              tmp
-      else if ( k >= __dword__ )
+      Else If ( k >= __dword__ )
         k                               =                                       ( k - __dword__ )
         dd                              ( tmp and 0xffffffff )
-      else if ( k >= __word__ )
+      Else If ( k >= __word__ )
         k                               =                                       ( k - __word__ )
         dw                              ( tmp and 0xffff )
-      else if ( k >= __byte__ )
+      Else If ( k >= __byte__ )
         k                               =                                       ( k - __byte__ )
         db                              ( tmp and 0xff )
-      end if
-    end while
-  else if ( mode = 1 )
-    repeat ( k )
+      End If
+    End While
+  Else If ( mode = 1 )
+    Repeat ( k )
       nop
-    end repeat
-  else if ( mode = 2 )
+    End Repeat
+  Else If ( mode = 2 )
     db ( k )                            dup ( 0 )
-  end if
-end macro
-macro enumerate                         value,                                  consts&
-  local k, item
+  End If
+End Macro
+Macro enumerate                         value,                                  consts&
+  Local k, item
   k                                     =                                       value
-  irp item, consts
+  Irp item, consts
     item                                =                                       k
     k                                   =                                       ( k + 1 )
-  end irp
-end macro
+  End Irp
+End Macro
 
-macro hb                                value&
-  local item
-  irp item, value
-    repeat 2
+Macro hb                                value&
+  Local item
+  Irp item, value
+    Repeat 2
       char                              =                                       ( '0' + ((( item ) shr (  8 - ( % * 4 ))) and 0x0f ))
-      if ( char > '9' )
+      If ( char > '9' )
         char                            =                                       ( char + 'a' - '9' - 1 )
-      end if
+      End If
       db                                char
-    end repeat
-  end irp
-end macro
-macro hw                                value&
-  local item
-  irp item, value
-    repeat 4
+    End Repeat
+  End Irp
+End Macro
+Macro hw                                value&
+  Local item
+  Irp item, value
+    Repeat 4
       char                              =                                       ( '0' + ((( item ) shr ( 16 - ( % * 4 ))) and 0x0f ))
-      if ( char > '9' )
+      If ( char > '9' )
         char                            =                                       ( char + 'a' - '9' - 1 )
-      end if
+      End If
       db                                char
-    end repeat
-  end irp
-end macro
-macro hd                                value&
-  local item
-  irp item, value
-    repeat 8
+    End Repeat
+  End Irp
+End Macro
+Macro hd                                value&
+  Local item
+  Irp item, value
+    Repeat 8
       char                              =                                       ( '0' + ((( item ) shr ( 32 - ( % * 4 ))) and 0x0f ))
-      if ( char > '9' )
+      If ( char > '9' )
         char                            =                                       ( char + 'a' - '9' - 1 )
-      end if
+      End If
       db                                char
-    end repeat
-  end irp
-end macro
-macro hq                                value&
-  local item
-  irp item, value
-    repeat 16
+    End Repeat
+  End Irp
+End Macro
+Macro hq                                value&
+  Local item
+  Irp item, value
+    Repeat 16
       char                              =                                       ( '0' + ((( item ) shr ( 64 - ( % * 4 ))) and 0x0f ))
-      if ( char > '9' )
+      If ( char > '9' )
         char                            =                                       ( char + 'a' - '9' - 1 )
-      end if
+      End If
       db                                char
-    end repeat
-  end irp
-end macro
+    End Repeat
+  End Irp
+End Macro
 
+Macro fail                              message
+  Err 10, message
+  Break
+  Break
+  Break
+  Break
+  Break
+End Macro
 ;include                                 'libraries/includes/macros/hash.finc'
 ;include                                 'libraries/includes/macros/ifwhile.finc'
 ;include                                 'libraries/includes/macros/lists.finc'
@@ -108,3 +116,4 @@ end macro
 ;include                                 'libraries/includes/macros/primes.finc'
 ;include                                 'libraries/includes/macros/random.finc'
 ;include                                 'libraries/includes/macros/var.finc'
+

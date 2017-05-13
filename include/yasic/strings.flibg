@@ -1,36 +1,36 @@
-struc yasic@@newString                  string*
-  local size, char
-  virtual                               at null
+Struc yasic@@newString                  string*
+  Local size, char
+  Virtual                               At null
     DB string
     size                                =                                       ( $ )
-    repeat ( size )
-      load                              char byte                               from ( % - 1 )
-      store                             byte char                               at yasic@@lblStrings:( yasic@@ptrStrings + % - 1 )
-    end repeat
-  end virtual
+    Repeat ( size )
+      Load                              char byte                               from ( % - 1 )
+      Store                             byte char                               At yasic@@lblStrings:( yasic@@ptrStrings + % - 1 )
+    End Repeat
+  End Virtual
   .value                                =                                       ( yasic@@ptrStrings )
   .size                                 =                                       ( size )
   yasic@@ptrStrings                     =                                       ( yasic@@ptrStrings + size )
-end struc
-macro yasic@@displayString              string*
-  local char
-  repeat ( string.size )
-    load                                char byte                               from  yasic@@lblStrings:( string.value + % - 1 )
+End Struc
+Macro yasic@@displayString              string*
+  Local char
+  Repeat ( string.size )
+    Load                                char byte                               from  yasic@@lblStrings:( string.value + % - 1 )
     display char
-  end repeat
-end macro
-struc yasic@@connectStrings             strings&
-  local char, size, offs, string
+  End Repeat
+End Macro
+Struc yasic@@connectStrings             strings&
+  Local char, size, offs, string
   size                                  =                                       null
   offs                                  =                                       yasic@@ptrStrings
-  irp string, strings
-    repeat ( string.size )
-      load                              char byte                               from  yasic@@lblStrings:( string.value + % - 1 )
-      store                             byte char                               at    yasic@@lblStrings:( yasic@@ptrStrings + % - 1 )
-    end repeat
+  Irp string, strings
+    Repeat ( string.size )
+      Load                              char byte                               from  yasic@@lblStrings:( string.value + % - 1 )
+      Store                             byte char                               At    yasic@@lblStrings:( yasic@@ptrStrings + % - 1 )
+    End Repeat
     size                                =                                       ( size + string.size )
     yasic@@ptrStrings                   =                                       ( yasic@@ptrStrings + string.size )
-  end irp
+  End Irp
   .size                                 =                                       size
   .value                                =                                       offs
-end struc
+End Struc

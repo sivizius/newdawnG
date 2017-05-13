@@ -1,24 +1,92 @@
-lstWhen                                 equ
-macro when?                             expression*
-  yasic@@parseExpression                expression
-  local                                 whenFailed
-  local                                 whenFinaly
-  lstWhen                               equ                                     whenFailed
-  macro when?.else!                     expression
-    whenFailed:
-    
-    match any, expression
-      
-    match else
-      purge when?.else!
-    end match
-  end macro
-  macro end?.when!
-    purge whenelse
-  end macro
-end macro
+yasic@@ifWhileState                     Equ                                     ''
+Macro if                                whenExpression*
+  Local theLayer
+  yasic@@ifWhileState                   Equ                                     'if'
+  pushExpression                        whenExpression
+  uf4@@newLayer
+End Macro
+Macro elif                              elseExpression*
+  Match                                 'if',                                   yasic@@ifWhileState
+    done
+    theLayer uf4@@endLayer
+    when                                ( theLayer )
+    pushExpression                      elseExpression
+    uf4@@newLayer
+  Else
+    fail '[asm:yasic:ifwhile] unexpected »elif«'
+  End Match
+End Macro
+Macro else
+  Match                                 'if',                                   yasic@@ifWhileState
+    done
+    theLayer uf4@@endLayer
+    when                                ( theLayer )
+    pushConstant                        ( 1 )
+    uf4@@newLayer
+  Else
+    fail '[asm:yasic:ifwhile] unexpected »else«'
+  End Match
+  Restore                               yasic@@ifWhileState
+  yasic@@ifWhileState                   Equ                                     'else'
+End Macro
+Macro end.if
+  Match                                 'if',                                   yasic@@ifWhileState
+    done
+    theLayer uf4@@endLayer
+    next                                ( theLayer )
+  Else Match                            'else',                                 yasic@@ifWhileState
+    done
+    theLayer uf4@@endLayer
+    next                                ( theLayer )
+  Else
+    fail '[asm:yasic:ifwhile] unexpected »end if«'
+  End Match
+  Restore                               yasic@@ifWhileState
+End Macro
+Macro while                             expression*
+  Local theLayer
+  yasic@@ifWhileState                   Equ                                     'while'
+  uf4@@newLayer
+  pushExpression                        expression
+  break
+End Macro
+Macro end.while
+  Match                                 'while',                                yasic@@ifWhileState
+    done
+    theLayer uf4@@endLayer
+    loop                                ( theLayer )
+  Else
+    fail '[asm:yasic:ifwhile] unexpected »end while«'
+  End Match
+  Restore                               yasic@@ifWhileState
+End Macro
 
-macro try
-  macro catch                           error
-  end macro
-end macro
+Macro try
+  yasic@@ifWhileState                   Equ                                     'try'
+End Macro
+Macro catch                             error
+  Match                                 'try',                                  yasic@@ifWhileState
+    ;<...>
+  Else
+    fail '[asm:yasic:ifwhile] unexpected »catch«'
+  End Match
+End Macro
+Macro finally
+  Match                                 'try',                                  yasic@@ifWhileState
+    ;<...>
+  Else
+    fail '[asm:yasic:ifwhile] unexpected »finally«'
+  End Match
+  Restore                               yasic@@ifWhileState
+  yasic@@ifWhileState                   Equ                                     'finally'
+End Macro
+Macro end.try
+  Match                                 'try',                                  yasic@@ifWhileState
+    ;<...>
+  Else Match                            'finally',                              yasic@@ifWhileState
+    ;<...>
+  Else
+    fail '[asm:yasic:ifwhile] unexpected »end try«'
+  End Match
+  Restore                               yasic@@ifWhileState
+End Macro

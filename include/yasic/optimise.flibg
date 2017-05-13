@@ -1,151 +1,151 @@
-macro yasic@@optimisePrefixNegative
+Macro yasic@@optimisePrefixNegative
   local temp
   temp                                  yasic@@pop
-  if ( temp.type = yasic@@tConstant )
+  If ( temp.type = yasic@@tConstant )
     yasic@@push                         yasic@@tConstant,             ( 0 - temp.value )
-  else
+  Else
     yasic@@push                         temp.type,                    temp.value,         temp.size,          temp.misc
     yasic@@push                         yasic@@tOperator,             yasic@@opPrefixPositive
-  end if
-end macro
-macro yasic@@optimiseAdd
-  local temp0, temp1
+  End If
+End Macro
+Macro yasic@@optimiseAdd
+  Local temp0, temp1
   temp1                                 yasic@@pop
   temp0                                 yasic@@pop
-  if      (( temp0.type = yasic@@tConstant ) & \
+  If      (( temp0.type = yasic@@tConstant ) & \
            ( temp1.type = yasic@@tConstant ))
     yasic@@push                         yasic@@tConstant,             ( temp0.value + temp1.value )
-  else if (( temp0.type = yasic@@tConstant ) & \
+  Else If (( temp0.type = yasic@@tConstant ) & \
            ( temp0.value = null ))
     yasic@@push                         temp1.type,                   temp1.value,        temp1.size,         temp1.misc
-  else if (( temp1.type = yasic@@tConstant ) & \
+  Else If (( temp1.type = yasic@@tConstant ) & \
            ( temp1.value = null ))
     yasic@@push                         temp0.type,                   temp0.value,        temp0.size,         temp0.misc
-  else
+  Else
     yasic@@push                         temp0.type,                   temp0.value,        temp0.size,         temp0.misc
     yasic@@push                         temp1.type,                   temp1.value,        temp1.size,         temp1.misc
     yasic@@push                         yasic@@tOperator,             yasic@@opAdd
-  end if
-end macro
-macro yasic@@optimiseSub
-  local temp0, temp1
+  End If
+End Macro
+Macro yasic@@optimiseSub
+  Local temp0, temp1
   temp1                                 yasic@@pop
   temp0                                 yasic@@pop
-  if (( temp0.type = yasic@@tConstant ) & \
+  If (( temp0.type = yasic@@tConstant ) & \
       ( temp1.type = yasic@@tConstant ))
     yasic@@push                         yasic@@tConstant,             ( temp0.value - temp1.value )
-  else if (( temp0.type = yasic@@tConstant ) & \
+  Else If (( temp0.type = yasic@@tConstant ) & \
            ( temp0.value = null ))
     yasic@@push                         temp1.type,                   temp1.value,        temp1.size,         temp1.misc
     yasic@@push                         yasic@@tOperator,             yasic@@opPrefixNegative
-  else if (( temp1.type = yasic@@tConstant ) & \
+  Else If (( temp1.type = yasic@@tConstant ) & \
            ( temp1.value = null ))
     yasic@@push                         temp0.type,                   temp0.value,        temp0.size,         temp0.misc
-  else
+  Else
     yasic@@push                         temp0.type,                   temp0.value,        temp0.size,         temp0.misc
     yasic@@push                         temp1.type,                   temp1.value,        temp1.size,         temp1.misc
     yasic@@push                         yasic@@tOperator,             yasic@@opSub
-  end if
-end macro
-macro yasic@@optimiseMul
-  local temp0, temp1, sign
+  End If
+End Macro
+Macro yasic@@optimiseMul
+  Local temp0, temp1, sign
   temp1                                 yasic@@pop
   temp0                                 yasic@@pop
-  if      (( temp0.type = yasic@@tConstant ) & \
+  If      (( temp0.type = yasic@@tConstant ) & \
            ( temp1.type = yasic@@tConstant ))
     sign                                =                                       1
-    if ( temp0.value and ( 1 shl 63 ))
+    If ( temp0.value and ( 1 shl 63 ))
       temp0                             =                                       ( 0 - temp0.value )
       sign                              =                                       ( 0 - sign )
-    else
+    Else
       temp0                             =                                       ( temp0.value )
-    end if
-    if ( temp1.value and ( 1 shl 63 ))
+    End If
+    If ( temp1.value and ( 1 shl 63 ))
       temp1                             =                                       ( 0 - temp1.value )
       sign                              =                                       ( 0 - sign )
-    else
+    Else
       temp1                             =                                       ( temp1.value )
-    end if
+    End If
     yasic@@push                         yasic@@tConstant,             (( sign * temp0 * temp1 ) and nil )
-  else if ((( temp0.type = yasic@@tConstant ) & \
+  Else If ((( temp0.type = yasic@@tConstant ) & \
             ( temp0.value = null ))           | \
            (( temp1.type = yasic@@tConstant ) & \
             ( temp1.value = null )))
-    if ( temp0.type = yasic@@tFunction )
-      while ( yasic@@ptrStack >= 16 )
+    If ( temp0.type = yasic@@tFunction )
+      While ( yasic@@ptrStack >= 16 )
         temp0                             yasic@@pop
-        if ( temp0.type = yasic@@tItem )
-          break
-        end if
-      end while
-    end if
+        If ( temp0.type = yasic@@tItem )
+          Break
+        End If
+      End While
+    End If
     yasic@@push                         yasic@@tConstant,             null
-  else if (( temp0.type = yasic@@tConstant ) & \
+  Else If (( temp0.type = yasic@@tConstant ) & \
            ( temp0.value = 1 ))
     yasic@@push                         temp1.type,                   temp1.value,        temp1.size,         temp1.misc
-  else if (( temp1.type = yasic@@tConstant ) & \
+  Else If (( temp1.type = yasic@@tConstant ) & \
            ( temp1.value = 1 ))
     yasic@@push                         temp0.type,                   temp0.value,        temp0.size,         temp0.misc
-  else
+  Else
     yasic@@push                         temp0.type,                   temp0.value,        temp0.size,         temp0.misc
     yasic@@push                         temp1.type,                   temp1.value,        temp1.size,         temp1.misc
     yasic@@push                         yasic@@tOperator,             yasic@@opMul
-  end if
-end macro
-macro yasic@@optimiseConnectStrings
-  local temp0, temp1
+  End If
+End Macro
+Macro yasic@@optimiseConnectStrings
+  Local temp0, temp1
   temp1                                 yasic@@pop
   temp0                                 yasic@@pop
-  if (( temp0.type = yasic@@tConstString ) & \
+  If (( temp0.type = yasic@@tConstString ) & \
       ( temp1.type = yasic@@tConstString ))
     temp1                               yasic@@connectStrings         temp0,              temp1
     yasic@@push                         yasic@@tConstString,          temp1.value,        temp1.size
-  else
+  Else
     yasic@@push                         temp0.type,                   temp0.value,        temp0.size,         temp0.misc
     yasic@@push                         temp1.type,                   temp1.value,        temp1.size,         temp1.misc
     yasic@@push                         yasic@@tOperator,             yasic@@opConnectStrings
-  end if
-end macro
-macro yasic@@optimiseExpression
-  local temp
+  End If
+End Macro
+Macro yasic@@optimiseExpression
+  Local temp
   yasic@@ptrQueque                      =                                       null
   yasic@@ptrStack                       =                                       null
-  while ( yasic@@ptrQueque < yasic@@endQueque )
+  While ( yasic@@ptrQueque < yasic@@endQueque )
     temp                                yasic@@deque
-    if ( temp.type = yasic@@tOperator )
-      if 0
-      else if ( temp.value = yasic@@opPrefixPositive )
+    If ( temp.type = yasic@@tOperator )
+      If 0
+      Else If ( temp.value = yasic@@opPrefixPositive )
         ;do nothing, +a is always equal to a, isn't it?
-      else if ( temp.value = yasic@@opPrefixNegative )
+      Else If ( temp.value = yasic@@opPrefixNegative )
         yasic@@optimisePrefixNegative
-      else if ( temp.value = yasic@@opAdd )
+      Else If ( temp.value = yasic@@opAdd )
         yasic@@optimiseAdd
-      else if ( temp.value = yasic@@opSub )
+      Else If ( temp.value = yasic@@opSub )
         yasic@@optimiseSub
-      else if ( temp.value = yasic@@opMul )
+      Else If ( temp.value = yasic@@opMul )
         yasic@@optimiseMul
-      else if ( temp.value = yasic@@opConnectStrings )
+      Else If ( temp.value = yasic@@opConnectStrings )
         yasic@@optimiseConnectStrings
-      else
+      Else
         yasic@@push                     temp.type,          temp.value,         temp.size,          temp.misc
-      end if
-    else if ( temp.type = yasic@@tFunction )
-      if      ( temp.misc = 0 )
+      End If
+    Else If ( temp.type = yasic@@tFunction )
+      If      ( temp.misc = 0 )
         yasic@@push                     yasic@@tFunction,   temp.value,         temp.size
-      ;else if ( temp.misc = yasic@@funcTypeOf )
-      else
-        err 10, '[asm:yasic] unknown constant function'
-      end if
-    else
+      ;Else If ( temp.misc = yasic@@funcTypeOf )
+      Else
+        Err 10, '[asm:yasic] unknown constant function'
+      End If
+    Else
       yasic@@push                       temp.type,          temp.value,         temp.size,          temp.misc
-    end if
-  end while
+    End If
+  End While
   yasic@@ptrQueque                      =                                       null
   yasic@@endQueque                      =                                       null
   yasic@@topStack                       =                                       null
   yasic@@unstackToQueque
-end macro
-macro yasic@@killOptimiser
-  purge yasic@@optimisePrefixNegative, yasic@@optimiseAdd, yasic@@optimiseSub, yasic@@optimiseMul
-  purge yasic@@optimiseExpression, yasic@@optimiseConnectStrings
-end macro
+End Macro
+Macro yasic@@killOptimiser
+  Purge yasic@@optimisePrefixNegative, yasic@@optimiseAdd, yasic@@optimiseSub, yasic@@optimiseMul
+  Purge yasic@@optimiseExpression, yasic@@optimiseConnectStrings
+End Macro

@@ -1,28 +1,28 @@
-macro format@@addFormat               format@@name*,                          format@@func*,                          format@@stop*
-  format@@lstFormat                   equ                                     format@@name,       format@@func,       format@@stop
-end macro
-macro format                          format@@name*,                          format@@args&
+Macro format@@addFormat               format@@name*,                          format@@func*,                          format@@stop*
+  format@@lstFormat                   Equ                                     format@@name,       format@@func,       format@@stop
+End Macro
+Macro format                          format@@name*,                          format@@args&
   display 'format: ', `format@@name, 10
-  macro import                        module
+  Macro import                        module
     eval                              'include ', "'include/", module, ".flibg'"
-  end macro
-  irpv                                format@@item,                           format@@lstFormat
-    match                             format@@theName =, format@@theFunc =, format@@theStop,                          format@@item
-      match                           `format@@theName,                       `format@@name
+  End Macro
+  Irpv                                format@@item,                           format@@lstFormat
+    Match                             format@@theName =, format@@theFunc =, format@@theStop,                          format@@item
+      Match                           `format@@theName,                       `format@@name
         format@@theFunc               format@@args
-        macro format@@theFinal
+        Macro format@@theFinal
           format@@theStop
-        end macro
-      end match
-    end match
-  end irpv
-  macro end?.format!
+        End Macro
+      End Match
+    End Match
+  End Irpv
+  Macro end?.format!
     format@@theFinal
-    purge import
-  end macro
-end macro
+    Purge import
+  End Macro
+End Macro
 
 ;( some formats )
 ;{
-  include                               'include/uf4.flibg'
+  Include                               'include/uf4.flibg'
 ;}

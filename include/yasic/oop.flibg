@@ -1,48 +1,48 @@
-macro package                           lstArguments&
+Macro package                           lstArguments&
   
-end macro
-macro class                             lstArgument&
-  local theArgument, restArgument
-  local name
-  match                                 +,                                      yasic@@global
-    match                               name restArgument,                      lstArgument
-      irpv                              theArgument,                            restArgument
-      end irpv
-      struc yasic@@classDefine          expression&
-        local type, value
-        match                           type value,                             expression
-          match                         +,                                      type
+End Macro
+Macro class                             lstArgument&
+  Local theArgument, restArgument
+  Local name
+  Match                                 +,                                      yasic@@global
+    Match                               name restArgument,                      lstArgument
+      Irpv                              theArgument,                            restArgument
+      End Irpv
+      Struc yasic@@classDefine          expression&
+        Local type, value
+        Match                           type value,                             expression
+          Match                         +,                                      type
             .                           type                                    value
-          else
+          Else
             err 10, '[asm:yasic] unknown type: »', `type, '«'
-          end match
-        else
+          End Match
+        Else
           err 10, '[asm:yasic] could not parse type'
-        end match
-      end struc
-      macro private                     expression&
-        local temp
+        End Match
+      End Struc
+      Macro private                     expression&
+        Local temp
         temp                            yasic@@classDefine                      expression
-      end macro
-      macro public                      expression&
-        local temp
+      End Macro
+      Macro public                      expression&
+        Local temp
         temp                            yasic@@classDefine                      expression
         oop@@#className#_public_#temp.name#_varType                             =                                       temp.uid
         oop@@#className#_public_#temp.name#_varIdent                            =                                       temp.var
-      end macro
-      macro end?.class!
-        local temp
-        yasic@@global                   equ                                     +
+      End Macro
+      Macro end?.class!
+        Local temp
+        yasic@@global                   Equ                                     +
         temp                            uf4@@endLayer
-        purge end?.class, private, public
+        Purge end?.class, private, public
         restruc yasic@@classDefine
-      end macro
+      End Macro
       uf4@@newLayer
-      yasic@@global                     equ                                     =
-    else
+      yasic@@global                     Equ                                     =
+    Else
       err 10, '[asm:yasic] could not parse name of the class'
-    end match
-  else
+    End Match
+  Else
     err 10, '[asm:yasic] definition of classes is only allowed in global environment'
-  end match
-end macro
+  End Match
+End Macro

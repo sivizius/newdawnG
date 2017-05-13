@@ -1,15 +1,15 @@
-include 'include/main.flibg'
-include 'include/format.flibg'
-include 'include/yasic.flibg'
+Include 'include/main.flibg'
+Include 'include/format.flibg'
+Include 'include/yasic.flibg'
 
 format                                  uf4,                              128,                                    ( 4096 * 4096 )
   import 'display'
-  match =0, yasic@@theFruitbotCodeVersion
+  Match =0, yasic@@theFruitbotCodeVersion
     import 'fruitbot/version_0'
-  else
-    err 10, '[yasic] fail: unknown version of fbc!', 10
-  end match
+  Else
+    Err 10, '[yasic] fail: unknown version of fbc!', 10
+  End Match
   code yasic
-    include yasic@@theInputFile
+    Include yasic@@theInputFile
   end code
 end format

@@ -1,0 +1,148 @@
+Include 'include/main.flibg'
+Include 'include/format.flibg'
+Include 'include/display.flibg'
+Include 'include/fruitbot/version_0.flibg'
+Include 'include/fruitbot/opcodes.flibg'
+
+compile@@ptrStringYapter                =                                       null
+compile@@lenStringYapter                =                                       null
+compile@@lenMagic                       =                                       null
+
+Include 'include/yasic/queque.flibg'
+yasic@@lenQueque                        =                                       ( 4096 * 16 )
+yasic@@ptrQueque                        =                                       null
+yasic@@endQueque                        =                                       null
+Virtual                                 At null
+  yasic@@lblQueque::
+    rb                                  ( yasic@@lenQueque )
+End Virtual
+
+Include 'include/yasic/stack.flibg'
+yasic@@lenStack                         =                                       ( 4096 * 16 )
+yasic@@ptrStack                         =                                       null
+yasic@@topStack                         =                                       null
+Virtual                                 At null
+  yasic@@lblStack::
+    rb                                  ( yasic@@lenStack )
+End Virtual
+
+Macro compile@@push                       address*
+  If ( compile@@ptrStack >= compile@@lenStack )
+    fail '[asm:compile] stack to small. adjust compile@@lenStack'
+  End If
+  Store                                 word address                            At compile@@lblStack:( compile@@ptrStack )
+  compile@@ptrStack                     =                                       ( compile@@ptrStack + 2 )
+End Macro
+Struc compile@@peek                     offs:0
+  If ( compile@@ptrStack < null )
+    fail '[asm:compile] stack is empty'
+  End If
+  Local address
+  Load                                  address word                            From compile@@lblStack:( compile@@ptrStack - ( 2 * offs ))
+  .                                     =                                       address
+End Struc
+Struc compile@@pop
+  Local address
+  compile@@ptrStack                     =                                       ( compile@@ptrStack - 2 )
+  address                               compile@@peek
+  .                                     =                                       address
+End Struc
+compile@@lenStack                       =                                       ( 4096 * 2 )
+compile@@ptrStack                       =                                       null
+compile@@topStack                       =                                       null
+Virtual                                 At null
+  compile@@lblStack::
+    rb                                  ( compile@@lenStack )
+End Virtual
+
+Macro compile@@decode                   context*, address*, size*, main*
+  Local ptrStart, ptrStopp, ptrMain
+  Local instruction, value, temp
+  ptrStart                              =                                       ( address )
+  ptrStopp                              =                                       ( address + size )
+  If (( main >= null ) & ( main < size ))
+    ptrMain                             =                                       ( ptrStart + main )
+  Else
+    ptrMain                             =                                       ( ptrStart )
+  End If
+  While ( 1 )
+    If (( ptrMain < ptrStart ) | ( ptrMain >= ptrStopp ))
+      fail '[asm:compiler:linux-amd64] invalid instruction-pointer'
+    End If
+    Load                                instruction byte                        From context:( ptrMain )
+    ;displayValue 'addr: 0x', ptrMain
+    ptrMain                             =                                       ( ptrMain + 1 )
+    ;displayValue 'inst: 0x', instruction
+    If      ( instruction = fbc0@@opPushByte )
+      Load                              value byte                              From context:( ptrMain )
+      displayValue 'pushByte 0x', value
+      ptrMain                           =                                       ( ptrMain + 1 )
+      yasic@@push                       fbc0@@tConstant,                        ((( value and 0x00000080 ) * 0xffffffffffffff00 ) or value )
+    Else if ( instruction = fbc0@@opPushWord )
+      Load                              value word                              From context:( ptrMain )
+      displayValue 'pushWord 0x', value
+      ptrMain                           =                                       ( ptrMain + 2 )
+      yasic@@push                       fbc0@@tConstant,                        ((( value and 0x00008000 ) * 0xffffffffffff0000 ) or value )
+    Else if ( instruction = fbc0@@opPushDWord )
+      Load                              value dword                             From context:( ptrMain )
+      displayValue 'pushDWord 0x', value
+      ptrMain                           =                                       ( ptrMain + 4 )
+      yasic@@push                       fbc0@@tConstant,                        ((( value and 0x80000000 ) * 0xffffffff00000000 ) or value )
+    Else if ( instruction = fbc0@@opPushQWord )
+      Load                              value qword                             From context:( ptrMain )
+      displayValue 'pushQWord 0x', value
+      ptrMain                           =                                       ( ptrMain + 8 )
+      yasic@@push                       fbc0@@tConstant,                        ( value )
+    Else if ( instruction = fbc0@@opAdd )
+      If ( yasic@@ptrStack < 32 )
+        fail '[asm:compiler] add need 2 arguments in stack'
+      End If
+      display 'add', 10
+    Else if ( instruction = fbc0@@opLbl )
+      display 'lbl', 10
+      ptrMain                           =                                       ( ptrMain + 8 )
+    Else
+      temp fbc0@@mnemonic               instruction
+      displayValue 'instruction: 0x', instruction
+      fail < '[asm:compiler:linux-amd64] invalid instruction: »', temp, '«' >
+    End If
+  End While
+End Macro
+Macro compile@@buildYapter              address,  type,     size,     resv,     misc,     pointer,  dword0,   dword1,   dword2,   lblInputFile
+  If ( compile@@lenMagic = 0 )
+    compile@@lenMagic                   =                                       ( address )
+    Repeat ( compile@@lenMagic )
+      Load                              char byte                               From lblInputFile:( % - 1 )
+      db                                char
+    End Repeat
+  End If
+  If      ( type = null )
+    compile@@ycontent                   =                                       ( address + 16 )
+    Break
+  Else If ( type = fbc0@@yBytecode )
+    dw type, size
+    dd dword0,   dword1,   dword2
+  Else If ( type = fbc0@@yStrings )
+    dw type, size
+    dd dword0,   dword1,   dword2
+    compile@@ptrStringYapter            =                                       ( dword1 + compile@@ycontent )
+    compile@@lenStringYapter            =                                       dword0
+;    displayValue '*0x', compile@@ptrStringYapter
+  Else
+    displayValue 'type: 0x', type
+    fail '[asm:compile:linux-amd64] unknown yapter-type'
+  End If
+End Macro
+Macro compile@@loadYapter               address,  type,     size,     resv,     misc,     pointer,  dword0,   dword1,   dword2,   lblInputFile
+  Local offs, lenght, char
+  If      ( type = null )
+    Break
+  Else If ( type = fbc0@@yBytecode )
+    If ( size = fbc0@@version )
+      compile@@decode                   lblInputFile,                           ( dword2 + compile@@ycontent ),         dword0,   dword1
+    End If
+  Else If ( type = fbc0@@yStrings )
+  End If
+End Macro
+
+uf4@@parseFile                          compile@@theInputFile,                  compile@@buildYapter,                   compile@@loadYapter

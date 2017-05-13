@@ -1,0 +1,68 @@
+enumerate 0x00,                         newdawn@@FailSafe, \                    ;fail safe
+                                        newdawn@@dqpConstant, \                 ;deque a constant value                     from queque and push to stack
+                                        newdawn@@dqpString, \                   ;deque a file-pointer to a constant string  from queque and push to stack
+                                        newdawn@@dqpAddress, \                  ;deque an address                           from queque and push to stack
+                                        newdawn@@dqpVariable, \                 ;deque an identifier of a variable          from queque and push to stack
+                                        newdawn@@dqpFunction, \                 ;deque a pointer to a function              from queque and push to stack
+                                        newdawn@@numOpcodes
+if ( newdawn@@numOpcodes > 255 )
+  err '[asm:newdawn] too many opcodes!', 10
+end if
+
+
+macro fail_safe
+  db newdawn@@FailSafe
+end macro
+macro aConstant
+  
+  db newdawn@@dqpConstant
+end macro
+
+
+;( type )
+  newdawn@@tNothing                     =                                       0x00                                    ;empty operant
+  newdawn@@tConstant                    =                                       0x01                                    ;value                is a constant value
+  newdawn@@tString                      =                                       0x02                                    ;operant              is a constant string
+  newdawn@@tAddress                     =                                       0x03                                    ;value                is at address=value
+  newdawn@@tBuffer                      =                                       0x04                                    ;buffer/string        may lie at address=value
+  newdawn@@tPointer                     =                                       0x05                                    ;value/buffer/string  is at an address pointed by address
+  newdawn@@tVariable                    =                                       0x06                                    ;operant              is some kind of highlevel variable of fixed size
+  newdawn@@tRegister                    =                                       0x07                                    ;operant              is a register
+  newdawn@@tFunction                    =                                       0x08                                    ;operant              is a function
+  newdawn@@tArgument                    =                                       0x09                                    ;an argument comes after this
+  newdawn@@tTreeNode                    =                                       0x0a                                    ;its a tree-node
+  newdawn@@tOperator                    =                                       0x0b                                    ;its a operator
+  newdawn@@tStack                       =                                       0x0c                                    ;value is in the stack
+  newdawn@@tUnknown                     =                                       0xff                                    ;unknown operant, should cause an fatal error!
+
+  macro newdawn@@tName                  type,     func
+    if      ( type = newdawn@@tAddress  )
+      func 'address '
+    else if ( type = newdawn@@tArgument )
+      func 'argument'
+    else if ( type = newdawn@@tBuffer   )
+      func 'buffer  '
+    else if ( type = newdawn@@tConstant )
+      func 'constant'
+    else if ( type = newdawn@@tFunction )
+      func 'function'
+    else if ( type = newdawn@@tNothing  )
+      func 'nothing'
+    else if ( type = newdawn@@tOperator )
+      func 'operator'
+    else if ( type = newdawn@@tPointer  )
+      func 'pointer '
+    else if ( type = newdawn@@tRegister )
+      func 'register'
+    else if ( type = newdawn@@tStack    )
+      func 'stack   '
+    else if ( type = newdawn@@tString   )
+      func 'string  '
+    else if ( type = newdawn@@tTreeNode )
+      func 'tree-node'
+    else if ( type = newdawn@@tVariable )
+      func 'variable'
+    else
+      func 'unknown '
+    end if
+  end macro

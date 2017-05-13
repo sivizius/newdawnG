@@ -1,4 +1,4 @@
-uf4@@magicString                        equ                                     '#!uf4:newdawn', 13, 10, 0
+uf4@@magicString                        Equ                                     '#!uf4:newdawn', 13, 10, 0
 ;( variables )
 ;{
 ;:  uf4@@tblYapter                      table with all the yapters.
@@ -17,34 +17,34 @@ uf4@@magicString                        equ                                     
   uf4@@tInvalidTypes                    =                                       65536                                   ;and above
 ;}
 
-struc uf4@@addYapterType                uf4@@name*,         uf4@@func*,         uf4@@stop*
-  if ( uf4@@tTypeCounter >= uf4@@tInvalidTypes )
+Struc uf4@@addYapterType                uf4@@name*,         uf4@@func*,         uf4@@stop*
+  If ( uf4@@tTypeCounter >= uf4@@tInvalidTypes )
     err '[asm:uf4] maximum number of yapter-types reached'
-  end if
-  uf4@@lstYapterTypes                   equ                                     uf4@@name,       uf4@@func,       uf4@@stop
+  End If
+  uf4@@lstYapterTypes                   Equ                                     uf4@@name,       uf4@@func,       uf4@@stop
   .                                     =                                       ( uf4@@tTypeCounter )
   uf4@@tTypeCounter                     =                                       ( uf4@@tTypeCounter + 1 )
-end struc
-struc uf4@@addUnlistedYapterType
-  if ( uf4@@tTypeCounter >= uf4@@tInvalidTypes )
+End Struc
+Struc uf4@@addUnlistedYapterType
+  If ( uf4@@tTypeCounter >= uf4@@tInvalidTypes )
     err '[asm:uf4] maximum number of yapter-types reached'
-  end if
+  End If
   ;not directly accessable
   .                                     =                                       ( uf4@@tTypeCounter )
   uf4@@tTypeCounter                     =                                       ( uf4@@tTypeCounter + 1 )
-end struc
+End Struc
 
-macro uf4@@theFormat                    uf4@@lenStack,                          uf4@@lenVirtualLayer
-  local uf4@@lblMagic, uf4@@ptrMagic, uf4@@lenMagic
-  local uf4@@lblYtable, uf4@@ptrYtable, uf4@@lenYtable
-  local uf4@@lblYcontent, uf4@@ptrYcontent, uf4@@lenYcontent
-  local uf4@@lblLayer, uf4@@ptrLayer, uf4@@lenLayer
-  local uf4@@lblStack, uf4@@ptrStack
-  virtual                               at ( null )
+Macro uf4@@theFormat                    uf4@@lenStack,                          uf4@@lenVirtualLayer
+  Local uf4@@lblMagic, uf4@@ptrMagic, uf4@@lenMagic
+  Local uf4@@lblYtable, uf4@@ptrYtable, uf4@@lenYtable
+  Local uf4@@lblYcontent, uf4@@ptrYcontent, uf4@@lenYcontent
+  Local uf4@@lblLayer, uf4@@ptrLayer, uf4@@lenLayer
+  Local uf4@@lblStack, uf4@@ptrStack
+  Virtual                               At ( null )
     uf4@@lblStack::
       rq                                uf4@@lenStack                           ;offset
       rq                                uf4@@lenStack                           ;lenght
-  end virtual
+  End Virtual
   uf4@@ptrStack                         =                                       ( null )
   ;( magic number )
   ;{
@@ -58,26 +58,26 @@ macro uf4@@theFormat                    uf4@@lenStack,                          
     uf4@@lblYtable                      =                                       ( $ )
     db                                  ( 16 * uf4@@lenYtable )                 dup ( null )
     uf4@@ptrYtable                      =                                       ( null - 1 )
-    macro uf4@@addYapter                type,     size,     resv,     misc,     pointer
+    Macro uf4@@addYapter                type,     size,     resv,     misc,     pointer
       uf4@@ptrYtable                    =                                       ( uf4@@ptrYtable + 1 )
-      virtual                           at null
-        store                           word  type                              at uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x00 )
-        store                           word  size                              at uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x02 )
-        store                           word  resv                              at uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x04 )
-        store                           word  misc                              at uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x06 )
-        store                           qword pointer                           at uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x08 )
-      end virtual
-    end macro
-    macro uf4@@addYapterD               type,     aWord,    dword0,   dword1,   dword2
+      Virtual                           At null
+        Store                           word  type                              At uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x00 )
+        Store                           word  size                              At uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x02 )
+        Store                           word  resv                              At uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x04 )
+        Store                           word  misc                              At uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x06 )
+        Store                           qword pointer                           At uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x08 )
+      End Virtual
+    End Macro
+    Macro uf4@@addYapterD               type,     aWord,    dword0,   dword1,   dword2
       uf4@@ptrYtable                    =                                       ( uf4@@ptrYtable + 1 )
-      virtual                           at null
-        store                           word  type                              at uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x00 )
-        store                           word  aWord                             at uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x02 )
-        store                           dword dword0                            at uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x04 )
-        store                           dword dword1                            at uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x08 )
-        store                           dword dword2                            at uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x0c )
-      end virtual
-    end macro
+      Virtual                           At null
+        Store                           word  type                              At uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x00 )
+        Store                           word  aWord                             At uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x02 )
+        Store                           dword dword0                            At uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x04 )
+        Store                           dword dword1                            At uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x08 )
+        Store                           dword dword2                            At uf4@@lblMagic:( uf4@@lblYtable + 16 * uf4@@ptrYtable + 0x0c )
+      End Virtual
+    End Macro
   ;}
   ;( content of yapters )
   ;{
@@ -85,182 +85,182 @@ macro uf4@@theFormat                    uf4@@lenStack,                          
       rq                                ( uf4@@lenYcontent )
     uf4@@ptrYcontent                    =                                       ( null )
   ;}
-  macro uf4@@allocateLayer              lenght*
+  Macro uf4@@allocateLayer              lenght*
     uf4@@ptrYcontent                    =                                       ( uf4@@ptrYcontent + lenght )
-  end macro
-  struc uf4@@allocateLayer              lenght*
+  End Macro
+  Struc uf4@@allocateLayer              lenght*
     .                                   =                                       ( uf4@@ptrYcontent )
     .size                               =                                       ( lenght )
     uf4@@allocateLayer                  lenght
-  end struc
-  struc uf4@@getLayer
+  End Struc
+  Struc uf4@@getLayer
     .lblContent                         =                                       uf4@@lblYcontent
-    .lblMagic                           equ                                     uf4@@lblMagic
+    .lblMagic                           Equ                                     uf4@@lblMagic
     .lenLayer                           =                                       uf4@@lenLayer
     .ptrContent                         =                                       uf4@@ptrYcontent
     .ptrLayer                           =                                       uf4@@ptrLayer
-  end struc
-  macro uf4@@newLayer
-    store                               qword uf4@@ptrLayer                     at   uf4@@lblStack:( uf4@@ptrStack + 0 )
-    store                               qword uf4@@lenLayer                     at   uf4@@lblStack:( uf4@@ptrStack + 8 )
+  End Struc
+  Macro uf4@@newLayer
+    Store                               qword uf4@@ptrLayer                     At   uf4@@lblStack:( uf4@@ptrStack + 0 )
+    Store                               qword uf4@@lenLayer                     At   uf4@@lblStack:( uf4@@ptrStack + 8 )
     uf4@@ptrStack                       =                                       ( uf4@@ptrStack + 16 )
-    if ( uf4@@ptrStack >= uf4@@ptrStack * 16 )
+    If ( uf4@@ptrStack >= uf4@@ptrStack * 16 )
       err 10, '[asm:uf4] stack-overflow in ycontent'
-    end if
+    End If
     uf4@@ptrLayer                       =                                       ( uf4@@ptrLayer + uf4@@lenLayer )
     uf4@@lenLayer                       =                                       ( null )
-    macro db                            data&
-      local char
-      virtual                           at 0
+    Macro db                            data&
+      Local char
+      Virtual                           At 0
         DB                              data
-        repeat ( $ ), offs:0
-          load                          char byte                               from ( offs )
-          store                         byte char                               at   uf4@@lblLayer:( uf4@@ptrLayer + uf4@@lenLayer + offs )
-        end repeat
+        Repeat ( $ ), offs:0
+          Load                          char byte                               from ( offs )
+          Store                         byte char                               At   uf4@@lblLayer:( uf4@@ptrLayer + uf4@@lenLayer + offs )
+        End Repeat
         uf4@@lenLayer                   =                                       ( uf4@@lenLayer + $ )
-      end virtual
-    end macro
-    macro rb                            size*
+      End Virtual
+    End Macro
+    Macro rb                            size*
       uf4@@lenLayer                     =                                       ( uf4@@lenLayer + size * __byte__ )
-    end macro
-    struc db                            data&
+    End Macro
+    Struc db                            data&
       .                                 =                                       0
       db                                data
-    end struc
-    struc rb                            size*
+    End Struc
+    Struc rb                            size*
       .                                 =                                       0
       rb                                size
-    end struc
-    macro dw                            data&
-      local char
-      virtual                           at 0
+    End Struc
+    Macro dw                            data&
+      Local char
+      Virtual                           At 0
         DW                              data
-        repeat ( $ ), offs:0
-          load                          char byte                               from ( offs )
-          store                         byte char                               at   uf4@@lblLayer:( uf4@@ptrLayer + uf4@@lenLayer + offs )
-        end repeat
+        Repeat ( $ ), offs:0
+          Load                          char byte                               from ( offs )
+          Store                         byte char                               At   uf4@@lblLayer:( uf4@@ptrLayer + uf4@@lenLayer + offs )
+        End Repeat
         uf4@@lenLayer                   =                                       ( uf4@@lenLayer + $ )
-      end virtual
-    end macro
-    macro rw                            size*
+      End Virtual
+    End Macro
+    Macro rw                            size*
       uf4@@lenLayer                     =                                       ( uf4@@lenLayer + size * __word__ )
-    end macro
-    struc dw                            data&
+    End Macro
+    Struc dw                            data&
       .                                 =                                       0
       dw                                data
-    end struc
-    struc rw                            size*
+    End Struc
+    Struc rw                            size*
       .                                 =                                       0
       rw                                size
-    end struc
-    macro dd                            data&
-      local char
-      virtual                           at 0
+    End Struc
+    Macro dd                            data&
+      Local char
+      Virtual                           At 0
         DD                              data
-        repeat ( $ ), offs:0
-          load                          char byte                               from ( offs )
-          store                         byte char                               at   uf4@@lblLayer:( uf4@@ptrLayer + uf4@@lenLayer + offs )
-        end repeat
+        Repeat ( $ ), offs:0
+          Load                          char byte                               from ( offs )
+          Store                         byte char                               At   uf4@@lblLayer:( uf4@@ptrLayer + uf4@@lenLayer + offs )
+        End Repeat
         uf4@@lenLayer                   =                                       ( uf4@@lenLayer + $ )
-      end virtual
-    end macro
-    macro rd                            size*
+      End Virtual
+    End Macro
+    Macro rd                            size*
       uf4@@lenLayer                     =                                       ( uf4@@lenLayer + size * __dword__ )
-    end macro
-    struc dd                            data&
+    End Macro
+    Struc dd                            data&
       .                                 =                                       0
       dd                                data
-    end struc
-    struc rd                            size*
+    End Struc
+    Struc rd                            size*
       .                                 =                                       0
       rd                                size
-    end struc
-    macro dq                            data&
-      local char
-      virtual                           at 0
+    End Struc
+    Macro dq                            data&
+      Local char
+      Virtual                           At 0
         DQ                              data
-        repeat ( $ ), offs:0
-          load                          char byte                               from ( offs )
-          store                         byte char                               at   uf4@@lblLayer:( uf4@@ptrLayer + uf4@@lenLayer + offs )
-        end repeat
+        Repeat ( $ ), offs:0
+          Load                          char byte                               from ( offs )
+          Store                         byte char                               At   uf4@@lblLayer:( uf4@@ptrLayer + uf4@@lenLayer + offs )
+        End Repeat
         uf4@@lenLayer                   =                                       ( uf4@@lenLayer + $ )
-      end virtual
-    end macro
-    macro rq                            size*
+      End Virtual
+    End Macro
+    Macro rq                            size*
       uf4@@lenLayer                     =                                       ( uf4@@lenLayer + size * __qword__ )
-    end macro
-    struc dq                            data&
+    End Macro
+    Struc dq                            data&
       .                                 =                                       0
       dq                                data
-    end struc
-    struc rq                            size*
+    End Struc
+    Struc rq                            size*
       .                                 =                                       0
       rq                                size
-    end struc
-    macro uf4@@endLayer
-      repeat ( uf4@@lenLayer ), offs:0
-        load                            char byte                               from ( uf4@@ptrLayer + offs )
-        store                           byte char                               at   uf4@@lblMagic:( uf4@@lblYcontent + uf4@@ptrYcontent + offs )
-      end repeat
+    End Struc
+    Macro uf4@@endLayer
+      Repeat ( uf4@@lenLayer ), offs:0
+        Load                            char byte                               from ( uf4@@ptrLayer + offs )
+        Store                           byte char                               At   uf4@@lblMagic:( uf4@@lblYcontent + uf4@@ptrYcontent + offs )
+      End Repeat
       uf4@@ptrYcontent                  =                                       ( uf4@@ptrYcontent + uf4@@lenLayer )
-      if ( uf4@@ptrStack <= 0 )
+      If ( uf4@@ptrStack <= 0 )
         err 10, '[asm:uf4] stack-underflow in ycontent'
-      end if
+      End If
       uf4@@ptrStack                     =                                       ( uf4@@ptrStack - 16 )
-      load                              uf4@@ptrLayer qword                     from uf4@@lblStack:( uf4@@ptrStack + 0 )
-      load                              uf4@@lenLayer qword                     from uf4@@lblStack:( uf4@@ptrStack + 8 )
-      purge                             uf4@@endLayer
+      Load                              uf4@@ptrLayer qword                     from uf4@@lblStack:( uf4@@ptrStack + 0 )
+      Load                              uf4@@lenLayer qword                     from uf4@@lblStack:( uf4@@ptrStack + 8 )
+      Purge                             uf4@@endLayer
       restruc                           uf4@@endLayer
-      purge                             db, dw, dd, dq
-      purge                             rb, rw, rd, rq
+      Purge                             db, dw, dd, dq
+      Purge                             rb, rw, rd, rq
       restruc                           db, dw, dd, dq
       restruc                           rb, rw, rd, rq
-    end macro
-    struc uf4@@endLayer
+    End Macro
+    Struc uf4@@endLayer
       .                                 =                                       uf4@@ptrYcontent
       .size                             =                                       uf4@@lenLayer
       uf4@@endLayer
-    end struc
-  end macro
-  macro yapter                          uf4@@name*,                             uf4@@args&
-    irpv                                uf4@@item,                              uf4@@lstYapterTypes
-      match                             uf4@@theName =, uf4@@theFunc =, uf4@@theStop,                                uf4@@item
-        match                           `uf4@@theName,                          `uf4@@name
+    End Struc
+  End Macro
+  Macro yapter                          uf4@@name*,                             uf4@@args&
+    Irpv                                uf4@@item,                              uf4@@lstYapterTypes
+      Match                             uf4@@theName =, uf4@@theFunc =, uf4@@theStop,                                uf4@@item
+        Match                           `uf4@@theName,                          `uf4@@name
           uf4@@theFunc                  uf4@@args
-          macro uf4@@theFinal           theSize,  theBase,  theFile
+          Macro uf4@@theFinal           theSize,  theBase,  theFile
             uf4@@theStop                theSize,  theBase,  theFile
-          end macro
-        end match
-      end match
-    end irpv
+          End Macro
+        End Match
+      End Match
+    End Irpv
     uf4@@base                           =                                       ( $ )
     uf4@@file                           =                                       ( $% )
-    macro end?.yapter!
+    Macro end?.yapter!
       uf4@@size                         =                                       ( $% - uf4@@file )
       uf4@@theFinal                     uf4@@size,          uf4@@base,          ( uf4@@file - uf4@@lblYcontent )
-      purge end?.yapter
-    end macro
-  end macro
-  macro uf4@@endFormat
-      repeat ( uf4@@lenLayer ), offs:0
-        load                            char byte                               from ( uf4@@ptrLayer + offs )
-        store                           byte char                               at   uf4@@lblMagic:( uf4@@lblYcontent + uf4@@ptrYcontent + offs )
-      end repeat
+      Purge end?.yapter
+    End Macro
+  End Macro
+  Macro uf4@@endFormat
+      Repeat ( uf4@@lenLayer ), offs:0
+        Load                            char byte                               from ( uf4@@ptrLayer + offs )
+        Store                           byte char                               At   uf4@@lblMagic:( uf4@@lblYcontent + uf4@@ptrYcontent + offs )
+      End Repeat
       uf4@@ptrYcontent                  =                                       ( uf4@@ptrYcontent + uf4@@lenLayer )
-    end virtual
+    End Virtual
     uf4@@addYapter                      uf4@@tFinal,        0,                  0,                  0,                  'ycontent'
     uf4@@lenYcontent                    =                                       ( uf4@@ptrYcontent )
     uf4@@lenYtable                      =                                       ( uf4@@ptrYtable + 1 )
-    purge uf4@@newLayer, uf4@@allocateLayer
+    Purge uf4@@newLayer, uf4@@allocateLayer
     restruc uf4@@allocateLayer
-    purge uf4@@endFormat
-  end macro
-  virtual                               at 0
+    Purge uf4@@endFormat
+  End Macro
+  Virtual                               At 0
     uf4@@lblLayer::
       uf4@@ptrLayer                     =                                       ( null )
       uf4@@lenLayer                     =                                       ( null )
       rb                                ( uf4@@lenVirtualLayer )
-end macro
+End Macro
 format@@addFormat                       uf4,                uf4@@theFormat,     uf4@@endFormat
 
 
@@ -275,55 +275,60 @@ format@@addFormat                       uf4,                uf4@@theFormat,     
 
 
 
-virtual                                 at null
+Virtual                                 At null
   uf4@@lblSignature::
   db uf4@@magicString
-end virtual
-macro uf4@@parseFile                    fileName*,                              buildYapter*,                           loadYapter*
-  local lblInputFile, ptrInputFile, lenInputFile
-  local tmp0, tmp1, sig0, sig1
-  local type, size, resv, misc, dword0, dword1, dword2, pointer
-  virtual                               at null
+End Virtual
+Macro uf4@@parseFile                    fileName*,                              buildYapter*,                           loadYapter*
+  Local lblInputFile, ptrInputFile, lenInputFile
+  Local type, size, resv, misc, dword0, dword1, dword2, pointer
+  Local temp, char
+  Virtual                               At null
     lblInputFile::
-    file fileName
+      file                              fileName
     lenInputFile                        =                                       ( $ )
-  end virtual
-  load                                  tmp0 qword                              from lblInputFile:( 0 )
-  load                                  tmp1 qword                              from lblInputFile:( 8 )
-  load                                  sig0 qword                              from uf4@@lblSignature:( 0 )
-  load                                  sig1 qword                              from uf4@@lblSignature:( 8 )
-  if ( tmp0 <> sig0 | tmp1 <> sig1 )
-    err 10, '[uf4] fail: invalid signature!', 10
-  end if
-  uf4@@lenMagic                         =                                       16
-  ptrInputFile                          =                                       ( null )
-  while ( true )
-    ptrInputFile                        =                                       ( ptrInputFile + 16 )
-    if ( lenInputFile - ptrInputFile < 16 )
+  End Virtual
+  uf4@@lenMagic                         =                                       ( null )
+  While ( true )
+    Load                                char byte                               from lblInputFile:( uf4@@lenMagic )
+    Load                                temp byte                               from uf4@@lblSignature:( uf4@@lenMagic )
+    uf4@@lenMagic                       =                                       ( uf4@@lenMagic + 1 )
+    If ( temp = 0 )
+      Break
+    Else If ( char <> temp )
+      Err 10, '[uf4] fail: invalid signature!', 10
+      Break
+    End If
+  End While
+  ptrInputFile                          =                                       ( uf4@@lenMagic )
+  While ( true )
+    If ( lenInputFile - ptrInputFile < 16 )
       err 10, '[uf4] fail: end of file reached before processing yapter-table!', 10
-      break
-    end if
-    load                                type    word                            from lblInputFile:( ptrInputFile + 0x00 )
-    load                                size    word                            from lblInputFile:( ptrInputFile + 0x02 )
-    load                                resv    word                            from lblInputFile:( ptrInputFile + 0x04 )
-    load                                misc    word                            from lblInputFile:( ptrInputFile + 0x06 )
-    load                                pointer qword                           from lblInputFile:( ptrInputFile + 0x08 )
-    load                                dword0  dword                           from lblInputFile:( ptrInputFile + 0x04 )
-    load                                dword1  dword                           from lblInputFile:( ptrInputFile + 0x08 )
-    load                                dword2  dword                           from lblInputFile:( ptrInputFile + 0x0c )
+      Break
+    End If
+    Load                                type    word                            from lblInputFile:( ptrInputFile + 0x00 )
+    Load                                size    word                            from lblInputFile:( ptrInputFile + 0x02 )
+    Load                                resv    word                            from lblInputFile:( ptrInputFile + 0x04 )
+    Load                                misc    word                            from lblInputFile:( ptrInputFile + 0x06 )
+    Load                                pointer qword                           from lblInputFile:( ptrInputFile + 0x08 )
+    Load                                dword0  dword                           from lblInputFile:( ptrInputFile + 0x04 )
+    Load                                dword1  dword                           from lblInputFile:( ptrInputFile + 0x08 )
+    Load                                dword2  dword                           from lblInputFile:( ptrInputFile + 0x0c )
     buildYapter                         ptrInputFile,       type,     size,     resv,     misc,     pointer,  dword0,   dword1,   dword2,   lblInputFile
-  end while
-  ptrInputFile                          =                                       ( null )
-  while ( true )
     ptrInputFile                        =                                       ( ptrInputFile + 16 )
-    load                                type    word                            from lblInputFile:( ptrInputFile + 0x00 )
-    load                                size    word                            from lblInputFile:( ptrInputFile + 0x02 )
-    load                                resv    word                            from lblInputFile:( ptrInputFile + 0x04 )
-    load                                misc    word                            from lblInputFile:( ptrInputFile + 0x06 )
-    load                                pointer qword                           from lblInputFile:( ptrInputFile + 0x08 )
-    load                                dword0  dword                           from lblInputFile:( ptrInputFile + 0x04 )
-    load                                dword1  dword                           from lblInputFile:( ptrInputFile + 0x08 )
-    load                                dword2  dword                           from lblInputFile:( ptrInputFile + 0x0c )
+  End While
+  ptrInputFile                          =                                       ( uf4@@lenMagic )
+  While ( true )
+    Load                                type    word                            from lblInputFile:( ptrInputFile + 0x00 )
+    Load                                size    word                            from lblInputFile:( ptrInputFile + 0x02 )
+    Load                                resv    word                            from lblInputFile:( ptrInputFile + 0x04 )
+    Load                                misc    word                            from lblInputFile:( ptrInputFile + 0x06 )
+    Load                                pointer qword                           from lblInputFile:( ptrInputFile + 0x08 )
+    Load                                dword0  dword                           from lblInputFile:( ptrInputFile + 0x04 )
+    Load                                dword1  dword                           from lblInputFile:( ptrInputFile + 0x08 )
+    Load                                dword2  dword                           from lblInputFile:( ptrInputFile + 0x0c )
     loadYapter                          ptrInputFile,       type,     size,     resv,     misc,     pointer,  dword0,   dword1,   dword2,   lblInputFile
-  end while
-end macro
+    ptrInputFile                        =                                       ( ptrInputFile + 16 )
+  End While
+End Macro
+

@@ -1,45 +1,46 @@
-macro displayHexQWord                   value*
-  local                                 char
-  repeat 16
+Macro displayHexQWord                   value*
+  Local                                 char
+  Repeat 16
     char                                =                                       ( '0' + ((( value ) shr ( 64 - ( % * 4 ))) and 0x0f ))
-    if ( char > '9' )
+    If ( char > '9' )
       char                              =                                       ( char + 'a' - '9' - 1 )
-    end if
+    End If
     display                             char
-  end repeat
-end macro
-macro displayHexDWord                   value*
-  local                                 char
-  repeat 8
+  End Repeat
+End Macro
+Macro displayHexDWord                   value*
+  Local                                 char
+  Repeat 8
     char                                =                                       ( '0' + ((( value ) shr ( 32 - ( % * 4 ))) and 0x0f ))
-    if ( char > '9' )
+    If ( char > '9' )
       char                              =                                       ( char + 'a' - '9' - 1 )
-    end if
+    End If
     display                             char
-  end repeat
-end macro
-macro displayHexWord                    value*
-  local                                 char
-  repeat 4
+  End Repeat
+End Macro
+Macro displayHexWord                    value*
+  Local                                 char
+  Repeat 4
     char                                =                                       ( '0' + ((( value ) shr ( 16 - ( % * 4 ))) and 0x0f ))
-    if ( char > '9' )
+    If ( char > '9' )
       char                              =                                       ( char + 'a' - '9' - 1 )
-    end if
+    End If
     display                             char
-  end repeat
-end macro
-macro displayHexByte                    value*
-  local                                 char
-  repeat 2
+  End Repeat
+End Macro
+Macro displayHexByte                    value*
+  Local                                 char
+  Repeat 2
     char                                =                                       ( '0' + ((( value ) shr (  8 - ( % * 4 ))) and 0x0f ))
-    if ( char > '9' )
+    If ( char > '9' )
       char                              =                                       ( char + 'a' - '9' - 1 )
-    end if
+    End If
     display                             char
-  end repeat
-end macro
-macro displayValue                      string*,                                value*
+  End Repeat
+End Macro
+Macro displayValue                      string*,                                value*
   display string
   displayHexQWord value
   display 10
-end macro
+End Macro
+

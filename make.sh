@@ -3,7 +3,9 @@
 function modes
 {
   echo "[fail] valid [modes] are:"
-  echo "       * src2fbc0 (source to fbc0 byte code)"
+  echo "       * yasic        (compile yasic code and create uf4 file)"
+  echo "       * disasm       (disassemble fbc0 byte code and show structure)"
+  echo "       * linux-amd64  (add amd64 code with linux API to uf4 file)"
 }
 
 if [[ $# -lt 2 ]]
@@ -43,13 +45,13 @@ then
 fi
 
 case $1 in
-  "yasic2fbc0")
+  "yasic")
     echo "yasic@@theInputFile equ '$2'"                     >         "build/temp.fasmg"
     echo "yasic@@theFruitbotCodeVersion equ 0"              >>        "build/temp.fasmg"
     echo "include 'compilers/yasic.fasmg'"                  >>        "build/temp.fasmg"
     output="final/$name.uf4"
     echo "fasmg 'build/temp.fasmg' '$output'"               2>&1| tee "build/$name.log"
-    fasmg "build/temp.fasmg" "$output"                      2>&1| tee "build/$name.log"
+    fasmg "-e" "1" "build/temp.fasmg" "$output"             2>&1| tee "build/$name.log"
   ;;
   "disasm")
     echo "disasm@@theInputFile equ '$2'"                    >         "build/temp.fasmg"
@@ -58,8 +60,12 @@ case $1 in
     echo "fasmg 'build/temp.fasmg' '$output'"               2>&1| tee "build/$name.log"
     fasmg "build/temp.fasmg" "$output"                      2>&1| tee "build/$name.log"
   ;;
-  "fbc02amd64")
-    echo "[fail] not implemented yet :-/!"                  2>&1| tee "build/$name.log"
+  "linux-amd64")
+    echo "compile@@theInputFile equ '$2'"                   >         "build/temp.fasmg"
+    echo "include 'compilers/linux-amd64.fasmg'"            >>        "build/temp.fasmg"
+    output="final/$name.uf4"
+    echo "fasmg 'build/temp.fasmg' '$output'"               2>&1| tee "build/$name.log"
+    fasmg "build/temp.fasmg" "$output"                      2>&1| tee "build/$name.log"
   ;;
   *)
     echo "[fail] unknown mode »$1«!"                        2>&1| tee "build/$name.log"

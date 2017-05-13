@@ -50,78 +50,78 @@
 ;:  0x0e  +x, -x, ~x, !x, ++x, --x
 ;:  0x0f  x++, x--, ..
 ;}
-macro yasic@@opDisplay                  operator*
-  if false
-  else if ( operator = yasic@@opPrefixArithmeticNot )
+Macro yasic@@opDisplay                  operator*
+  If false
+  Else If ( operator = yasic@@opPrefixArithmeticNot )
     display '~'
-  else if ( operator = yasic@@opPrefixLogicNot )
+  Else If ( operator = yasic@@opPrefixLogicNot )
     display '!'
-  else if ( operator = yasic@@opPrefixNegative )
+  Else If ( operator = yasic@@opPrefixNegative )
     display '-'
-  else if ( operator = yasic@@opPrefixPositive )
+  Else If ( operator = yasic@@opPrefixPositive )
     display '+'
-  else if ( operator = yasic@@opAdd )
+  Else If ( operator = yasic@@opAdd )
     display '+'
-  else if ( operator = yasic@@opSub )
+  Else If ( operator = yasic@@opSub )
     display '-'
-  else if ( operator = yasic@@opMul )
+  Else If ( operator = yasic@@opMul )
     display '*'
-  else if ( operator = yasic@@opDiv )
+  Else If ( operator = yasic@@opDiv )
     display '/'
-  else if ( operator = yasic@@opMod )
+  Else If ( operator = yasic@@opMod )
     display '%'
-  else if ( operator = yasic@@opPower )
+  Else If ( operator = yasic@@opPower )
     display '^'
-  else if ( operator = yasic@@opArithmeticAnd )
+  Else If ( operator = yasic@@opArithmeticAnd )
     display '&'
-  else if ( operator = yasic@@opArithmeticOr )
+  Else If ( operator = yasic@@opArithmeticOr )
     display '|'
-  else if ( operator = yasic@@opArithmeticXor )
+  Else If ( operator = yasic@@opArithmeticXor )
     display '!'
-  else if ( operator = yasic@@opLogicAnd )
+  Else If ( operator = yasic@@opLogicAnd )
     display 'and'
-  else if ( operator = yasic@@opLogicOr )
+  Else If ( operator = yasic@@opLogicOr )
     display 'or'
-  else if ( operator = yasic@@opLogicXor )
+  Else If ( operator = yasic@@opLogicXor )
     display 'xor'
-  else if ( operator = yasic@@opUnsignedShiftLeft )
+  Else If ( operator = yasic@@opUnsignedShiftLeft )
     display '<<'
-  else if ( operator = yasic@@opUnsignedShiftRight )
+  Else If ( operator = yasic@@opUnsignedShiftRight )
     display '>>'
-  else if ( operator = yasic@@opSignedShiftRight )
+  Else If ( operator = yasic@@opSignedShiftRight )
     display '>>>'
-  else if ( operator = yasic@@opLet )
+  Else If ( operator = yasic@@opLet )
     display '='
-  else if ( operator = yasic@@opEqual )
+  Else If ( operator = yasic@@opEqual )
     display '=='
-  else if ( operator = yasic@@opUnequal )
+  Else If ( operator = yasic@@opUnequal )
     display '!='
-  else if ( operator = yasic@@opAbove )
+  Else If ( operator = yasic@@opAbove )
     display '>'
-  else if ( operator = yasic@@opAboveEqual )
+  Else If ( operator = yasic@@opAboveEqual )
     display '>='
-  else if ( operator = yasic@@opBelow )
+  Else If ( operator = yasic@@opBelow )
     display '<'
-  else if ( operator = yasic@@opBelowEqual )
+  Else If ( operator = yasic@@opBelowEqual )
     display '<='
-  else if ( operator = yasic@@opConnectStrings )
+  Else If ( operator = yasic@@opConnectStrings )
     display '..'
-  else
+  Else
     display '0x'
     displayHexByte ( operator )
-  end if
-end macro
-macro yasic@@opCompile                  operator*
-  if false
-  else if ( operator = yasic@@opAdd )
+  End If
+End Macro
+Macro yasic@@opCompile                  operator*
+  If false
+  Else If ( operator = yasic@@opAdd )
     add
-  else if ( operator = yasic@@opSub )
+  Else If ( operator = yasic@@opSub )
     sub
-  else if ( operator = yasic@@opMul )
+  Else If ( operator = yasic@@opMul )
     mul
-  else if ( operator = yasic@@opDiv )
+  Else If ( operator = yasic@@opDiv )
     div
-  else
+  Else
     err 10, '[asm:yasic] cannot compile operation'
-  end if
-end macro
+  End If
+End Macro

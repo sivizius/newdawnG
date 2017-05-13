@@ -1,36 +1,36 @@
-macro yasic@@push                       type*,              value*,             size:0,             misc:0
+Macro yasic@@push                       type*,              value*,             size:0,             misc:0
   ;display 'push', 10
   ;displayValue '  type  0x', type
   ;displayValue '  misc  0x', misc
   ;displayValue '  size  0x', size
   ;displayValue '  value 0x', value
   ;displayValue '  *ptr  0x', yasic@@ptrStack
-  if ( yasic@@ptrStack >= yasic@@lenStack )
+  If ( yasic@@ptrStack >= yasic@@lenStack )
     err 10, '[asm:yasic] stack to small. adjust yasic@@lenStack'
-  end if
-  store                                 word  type                              at yasic@@lblStack:( yasic@@ptrStack + 0x00 )
-  store                                 word  misc                              at yasic@@lblStack:( yasic@@ptrStack + 0x02 )
-  store                                 dword size                              at yasic@@lblStack:( yasic@@ptrStack + 0x04 )
-  store                                 qword value                             at yasic@@lblStack:( yasic@@ptrStack + 0x08 )
+  End If
+  Store                                 word  type                              At yasic@@lblStack:( yasic@@ptrStack + 0x00 )
+  Store                                 word  misc                              At yasic@@lblStack:( yasic@@ptrStack + 0x02 )
+  Store                                 dword size                              At yasic@@lblStack:( yasic@@ptrStack + 0x04 )
+  Store                                 qword value                             At yasic@@lblStack:( yasic@@ptrStack + 0x08 )
   yasic@@ptrStack                       =                                       ( yasic@@ptrStack + 16 )
-end macro
-struc yasic@@peek                       offs:0
-  if ( yasic@@ptrStack < null )
+End Macro
+Struc yasic@@peek                       offs:0
+  If ( yasic@@ptrStack < null )
     err 10, '[asm:yasic] stack is empty'
-  end if
-  local type, misc, size, value
-  load                                  type  word                              from yasic@@lblStack:( yasic@@ptrStack - ( 16 * offs ) + 0x00 )
-  load                                  misc  word                              from yasic@@lblStack:( yasic@@ptrStack - ( 16 * offs ) + 0x02 )
-  load                                  size  dword                             from yasic@@lblStack:( yasic@@ptrStack - ( 16 * offs ) + 0x04 )
-  load                                  value qword                             from yasic@@lblStack:( yasic@@ptrStack - ( 16 * offs ) + 0x08 )
+  End If
+  Local type, misc, size, value
+  Load                                  type  word                              from yasic@@lblStack:( yasic@@ptrStack - ( 16 * offs ) + 0x00 )
+  Load                                  misc  word                              from yasic@@lblStack:( yasic@@ptrStack - ( 16 * offs ) + 0x02 )
+  Load                                  size  dword                             from yasic@@lblStack:( yasic@@ptrStack - ( 16 * offs ) + 0x04 )
+  Load                                  value qword                             from yasic@@lblStack:( yasic@@ptrStack - ( 16 * offs ) + 0x08 )
   .type                                 =                                       type
   .misc                                 =                                       misc
   .size                                 =                                       size
   .value                                =                                       value
-end struc
-struc yasic@@pop
+End Struc
+Struc yasic@@pop
   ;display 'pop', 10
-  local temp
+  Local temp
   yasic@@ptrStack                       =                                       ( yasic@@ptrStack - 16 )
   temp                                  yasic@@peek
   .type                                 =                                       temp.type
@@ -42,15 +42,16 @@ struc yasic@@pop
   ;displayValue '  size  0x', temp.size
   ;displayValue '  value 0x', temp.value
   ;displayValue '  *ptr  0x', yasic@@ptrStack
-end struc
-macro yasic@@unstackToQueque
-  local type, misc, size, value
-  while ( yasic@@topStack < yasic@@ptrStack )
-    load                                type  word                              from yasic@@lblStack:( yasic@@topStack + 0x00 )
-    load                                misc  word                              from yasic@@lblStack:( yasic@@topStack + 0x02 )
-    load                                size  dword                             from yasic@@lblStack:( yasic@@topStack + 0x04 )
-    load                                value qword                             from yasic@@lblStack:( yasic@@topStack + 0x08 )
+End Struc
+Macro yasic@@unstackToQueque
+  Local type, misc, size, value
+  While ( yasic@@topStack < yasic@@ptrStack )
+    Load                                type  word                              from yasic@@lblStack:( yasic@@topStack + 0x00 )
+    Load                                misc  word                              from yasic@@lblStack:( yasic@@topStack + 0x02 )
+    Load                                size  dword                             from yasic@@lblStack:( yasic@@topStack + 0x04 )
+    Load                                value qword                             from yasic@@lblStack:( yasic@@topStack + 0x08 )
     yasic@@topStack                     =                                       ( yasic@@topStack + 16 )
     yasic@@enque                        type,     value,     size,     misc
-  end while
-end macro
+  End While
+End Macro
+

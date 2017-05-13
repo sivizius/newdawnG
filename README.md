@@ -42,17 +42,17 @@ I tried and try to follow the following conventions:
     * Names are descriptive, however *i*/*j*/*k* for iteratives in loops are allowed.
     * I utilized the British English spelling: *colour*, *organisation*, *centre*, *licence*, etc.; this will probably confuse a lot of people, but it is intended.
 * the code should have a tabular shape. E.g. »=« in `a = b ;comment` should have an offset of 41, the »b« an offset of 81, »;the comment« an offset of 121, etc.;
-  Sometimes multiple of 10 plus 1 are more rational.
+  Sometimes multiple of 10 plus 1 (11, 21, 31, ..., 10·n+1) are more rational.
   
 make.sh
 -------
 I provide a commandline tool to build which you can call like this:
 ```
-./make.sh \<mode> \<filename>
+./make.sh <mode> <filename>
 ```
 The following *modes* are implemented or planned:
 - [x] *yasic2fbc0* to compile [yasic](#yasic) source code to [fruitbot code version 0](#fruitbot-code) in an internal format ([uf4](#uf4)).
-- [x] *deasm* to disassemble `<filename>`
+- [x] *deasm* to disassemble `<filename>`.
 - [ ] *fbc2amd64* to compile fb-code to amd64-code. This is still an internal format ([uf4](#uf4)).
 - [ ] *uf42elf* creates an binary file in the executable and linking format.
 
