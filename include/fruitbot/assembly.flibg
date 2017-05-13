@@ -58,6 +58,29 @@ Macro call                              address*
   pushConstant                          ( address - temp.lenString )
   fbc0@@instruction                     fbc0@@opCall
 End Macro
+fbc0@@lenFunctionHeader                 =                                       32
+fbc0@@offFunctionInstruction            =                                       0x00
+fbc0@@offFunctionPadByte                =                                       0x01
+fbc0@@offFunctionSize                   =                                       0x02
+fbc0@@offFunctionReturnType             =                                       0x04
+fbc0@@offFunctionNumArguments           =                                       0x06
+fbc0@@offFunctionMyName                 =                                       0x08
+fbc0@@offFunctionPadDWord               =                                       0x0c
+fbc0@@offFunctionBlankAddress           =                                       0x10
+fbc0@@offFunctionPadQWord               =                                       0x18
+Macro fbc0@@function                    myName*,            lenFunction*,       returnType*,        numArguments*
+  Local temp
+  db                                    fbc0@@opFunction
+  db                                    0                                       ;not used yet
+  dw                                    lenFunction                             ;size of function
+  dw                                    returnType                              ;type of return value
+  dw                                    numArguments                            ;number of arguments. it does not matter which type or size they have.
+  temp fbc0@@operantString              myName
+  dd                                    temp                                    ;name of function
+  dd                                    0                                       ;not used yet
+  dq                                    0x0310961942233713                      ;can be used by compiler to save address of corresponding machine-code
+  db                                    '01234567'                              ;not used yet
+End Macro
 Macro allocGlobal                       ignore
   fbc0@@instruction                     fbc0@@opAllocGlobal
 End Macro
@@ -66,10 +89,6 @@ Macro allocLocal                        ignore
 End Macro
 Macro allocate                          ignore
   fbc0@@instruction                     fbc0@@opAllocate
-End Macro
-Macro lbl                               name
-  fbc0@@instruction                     fbc0@@opLbl
-  fbc0@@operantString                   `name
 End Macro
 Macro when                              address*
   Local temp

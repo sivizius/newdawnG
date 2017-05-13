@@ -12,6 +12,8 @@ Macro yasic@@newSpace
   yasic@@endQueque                      =                                       null
   yasic@@ptrStack                       =                                       null
   yasic@@topStack                       =                                       null
+  yasic@@ptrHelpStack                   =                                       null
+  yasic@@topHelpStack                   =                                       null
   yasic@@ptrStrings                     =                                       null
   yasic@@endStrings                     =                                       null
   yasic@@global                         Equ                                     +
@@ -26,6 +28,7 @@ Macro yasic@@newSpace
   End Macro
 End Macro
 yasic@@lenStack                         =                                       ( 4096 * 16 )
+yasic@@lenHelpStack                     =                                       ( 4096 * 16 )
 yasic@@lenQueque                        =                                       ( 4096 * 16 )
 yasic@@lenStrings                       =                                       ( 65536 )
 yasic@@maxNumOfTypes                    =                                       256
@@ -33,6 +36,10 @@ yasic@@maxNumOfTypes                    =                                       
 Virtual                                 At null
   yasic@@lblStack::
     rb                                  ( yasic@@lenStack )
+End Virtual
+Virtual                                 At null
+  yasic@@lblHelpStack::
+    rb                                  ( yasic@@lenHelpStack )
 End Virtual
 Virtual                                 At null
   yasic@@lblQueque::

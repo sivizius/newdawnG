@@ -55,3 +55,48 @@ Macro yasic@@unstackToQueque
   End While
 End Macro
 
+Macro yasic@@pushHelp                   type*,              value*,             size:0,             misc:0
+  ;display 'push', 10
+  ;displayValue '  type  0x', type
+  ;displayValue '  misc  0x', misc
+  ;displayValue '  size  0x', size
+  ;displayValue '  value 0x', value
+  ;displayValue '  *ptr  0x', yasic@@ptrHelpStack
+  If ( yasic@@ptrHelpStack >= yasic@@lenHelpStack )
+    err 10, '[asm:yasic] help-stack to small. adjust yasic@@lenHelpStack'
+  End If
+  Store                                 word  type                              At yasic@@lblHelpStack:( yasic@@ptrHelpStack + 0x00 )
+  Store                                 word  misc                              At yasic@@lblHelpStack:( yasic@@ptrHelpStack + 0x02 )
+  Store                                 dword size                              At yasic@@lblHelpStack:( yasic@@ptrHelpStack + 0x04 )
+  Store                                 qword value                             At yasic@@lblHelpStack:( yasic@@ptrHelpStack + 0x08 )
+  yasic@@ptrHelpStack                   =                                       ( yasic@@ptrHelpStack + 16 )
+End Macro
+Struc yasic@@peekHelp                   offs:0
+  If ( yasic@@ptrHelpStack < null )
+    err 10, '[asm:yasic] help-stack is empty'
+  End If
+  Local type, misc, size, value
+  Load                                  type  word                              from yasic@@lblHelpStack:( yasic@@ptrHelpStack - ( 16 * offs ) + 0x00 )
+  Load                                  misc  word                              from yasic@@lblHelpStack:( yasic@@ptrHelpStack - ( 16 * offs ) + 0x02 )
+  Load                                  size  dword                             from yasic@@lblHelpStack:( yasic@@ptrHelpStack - ( 16 * offs ) + 0x04 )
+  Load                                  value qword                             from yasic@@lblHelpStack:( yasic@@ptrHelpStack - ( 16 * offs ) + 0x08 )
+  .type                                 =                                       type
+  .misc                                 =                                       misc
+  .size                                 =                                       size
+  .value                                =                                       value
+End Struc
+Struc yasic@@popHelp
+  ;display 'pop', 10
+  Local temp
+  yasic@@ptrHelpStack                   =                                       ( yasic@@ptrHelpStack - 16 )
+  temp                                  yasic@@peekHelp
+  .type                                 =                                       temp.type
+  .misc                                 =                                       temp.misc
+  .size                                 =                                       temp.size
+  .value                                =                                       temp.value
+  ;displayValue '  type  0x', temp.type
+  ;displayValue '  misc  0x', temp.misc
+  ;displayValue '  size  0x', temp.size
+  ;displayValue '  value 0x', temp.value
+  ;displayValue '  *ptr  0x', yasic@@ptrHelpStack
+End Struc

@@ -1,2 +1,0 @@
-disasm@@theInputFile equ 'final/test.uf4'
-include 'compilers/disassembler.fasmg'

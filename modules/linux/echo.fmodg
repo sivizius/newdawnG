@@ -1,0 +1,20 @@
+echo@@hazModule                         =                                       false
+Macro echo@@initModule
+  If ( echo@@hazModule = false )
+    echo@@hazModule                     =                                       true
+  End If
+  compile@@finishModules                Equ                                     echo@@finishModule
+End Macro
+Macro echo@@finishModule
+  If ( echo@@hazModule = true )
+    echo@@hazModule                     =                                       false
+  End If
+End Macro
+
+Macro echo@@callModule                  function*
+  If      ( function = 0 )
+  ;Else If ( function =  )
+  Else
+    fail '[asm:module:echo] unknown function'
+  End If
+End Macro
