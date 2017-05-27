@@ -1,3 +1,4 @@
+Include 'include/yapters.flibg'
 uf4@@magicString                        Equ                                     '#!uf4:newdawn', 13, 10, 0
 ;( variables )
 ;{
@@ -6,33 +7,6 @@ uf4@@magicString                        Equ                                     
 ;:  uf4@@numYapter                      number of all yapters.
 ;:  uf4@@magicSize                      offset of the yapter-table in file.
 ;}
-;( predefined yapter-types )
-;{
-  uf4@@tFinal                           =                                       0
-  ;:  ---
-  uf4@@tTemporaryTypes                  =                                       1                                       ;and above
-  ;:  temporary defined types
-  uf4@@tTypeCounter                     =                                       uf4@@tTemporaryTypes
-  ;:  ---
-  uf4@@tInvalidTypes                    =                                       65536                                   ;and above
-;}
-
-Struc uf4@@addYapterType                uf4@@name*,         uf4@@func*,         uf4@@stop*
-  If ( uf4@@tTypeCounter >= uf4@@tInvalidTypes )
-    err '[asm:uf4] maximum number of yapter-types reached'
-  End If
-  uf4@@lstYapterTypes                   Equ                                     uf4@@name,       uf4@@func,       uf4@@stop
-  .                                     =                                       ( uf4@@tTypeCounter )
-  uf4@@tTypeCounter                     =                                       ( uf4@@tTypeCounter + 1 )
-End Struc
-Struc uf4@@addUnlistedYapterType
-  If ( uf4@@tTypeCounter >= uf4@@tInvalidTypes )
-    err '[asm:uf4] maximum number of yapter-types reached'
-  End If
-  ;not directly accessable
-  .                                     =                                       ( uf4@@tTypeCounter )
-  uf4@@tTypeCounter                     =                                       ( uf4@@tTypeCounter + 1 )
-End Struc
 
 Macro uf4@@theFormat                    uf4@@lenStack,                          uf4@@lenVirtualLayer
   Local uf4@@lblMagic, uf4@@ptrMagic, uf4@@lenMagic
@@ -248,7 +222,7 @@ Macro uf4@@theFormat                    uf4@@lenStack,                          
       End Repeat
       uf4@@ptrYcontent                  =                                       ( uf4@@ptrYcontent + uf4@@lenLayer )
     End Virtual
-    uf4@@addYapter                      uf4@@tFinal,        0,                  0,                  0,                  'ycontent'
+    uf4@@addYapter                      yapters@@tFinal,    0,                  0,                  0,                  'ycontent'
     uf4@@lenYcontent                    =                                       ( uf4@@ptrYcontent )
     uf4@@lenYtable                      =                                       ( uf4@@ptrYtable + 1 )
     Purge uf4@@newLayer, uf4@@allocateLayer

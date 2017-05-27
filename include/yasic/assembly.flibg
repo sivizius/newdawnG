@@ -1,0 +1,9 @@
+Macro yasic@@code
+  Macro fbc0@@killMySelf
+    fbc0@@killMySelf
+    yasic@@endSpace
+  End Macro
+  fbc0@@code
+  yasic@@newSpace
+End Macro
+format@@addCodeSpace                    yasic,                                  yasic@@code

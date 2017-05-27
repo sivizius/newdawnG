@@ -16,14 +16,11 @@ fbc0@@version                           =                                       
   fbc0@@tStack                          =                                       0x0c                                    ;value is in the stack
   fbc0@@tUnknown                        =                                       0xff                                    ;unknown operant, should cause an fatal error!
 ;}
-Macro code                              language
+Macro fbc0@@code
   Local fbc0@@lblString, fbc0@@ptrString, fbc0@@lenString
   Local fbc0@@lblCode, fbc0@@lenCode, fbc0@@ptrMain
   Local fbc0@@uf4Token
   Local fbc0@@lenMain
-  Macro fbc0@@killMySelf
-    Purge fbc0@@instruction, fbc0@@operantByte, fbc0@@operantWord, fbc0@@operantDWord, fbc0@@operantQWord, fbc0@@operantString, fbc0@@addString
-  End Macro
   Macro fbc0@@instruction               opcode*
     db                                  opcode
   End Macro
@@ -39,13 +36,16 @@ Macro code                              language
   Macro fbc0@@operantQWord              value*
     dq                                  value
   End Macro
+  Struc fbc0@@getToken
+    .lenString                          =                                       fbc0@@lenString
+  End Struc
   Struc fbc0@@operantString             string*
     Local char
     Virtual                             At null
       DB                                string
       Store                             word ( $ )                              At   fbc0@@uf4Token.lblMagic:( fbc0@@lblString + fbc0@@uf4Token.lblContent + fbc0@@ptrString )
       Repeat ( $ ), offs:0
-        Load                            char byte                               from ( offs )
+        Load                            char byte                               From ( offs )
         Store                           byte char                               At   fbc0@@uf4Token.lblMagic:( fbc0@@lblString + fbc0@@uf4Token.lblContent + fbc0@@ptrString + 2 + offs )
       End Repeat
       .                                 =                                       ( fbc0@@lblString + fbc0@@ptrString + 2 )
@@ -57,35 +57,16 @@ Macro code                              language
     temp fbc0@@operantString            string
     db                                  temp
   End Macro
-  Struc fbc0@@getToken
-    .lenString                          =                                       fbc0@@lenString
-  End Struc
-  import 'fruitbot/assembly'
-  Match , language
-    display '[asm:fbc0] warn: default language is assembler.', 10
-  Else Match =assembler, language
-  Else Match + =yasic, hazYasic language
-    display '[asm:fbc0] yet another symbolic instruction code!', 10
-    yasic@@newSpace
-    Macro fbc0@@killMySelf
-      fbc0@@killMySelf
-      yasic@@endSpace
-    End Macro
-  Else
-    err 10, '[asm:fbc0] unknown language »', `language, '«'
-  End Match
-  fbc0@@uf4Token                        uf4@@getLayer
-  fbc0@@ptrString                       =                                       ( null )
-  fbc0@@lblString                       uf4@@allocateLayer                      ( fbc0@@lenString )
-  fbc0@@lblCode                         uf4@@allocateLayer                      ( null )
-  uf4@@newLayer                                                                 ;<code>
-    fbc0@@function                      '__main__',         fbc0@@lenMain,      null,               null
-    uf4@@newLayer
-      call                              ( fbc0@@ptrMain + fbc0@@lenString )
-      stop
-    uf4@@endLayer
-  Macro end?.code!
-    Local temp
+  Macro format@@setCodeFinaliser
+    display '}', 10
+    fbc0@@codeFinaliser
+  End Macro
+  Macro fbc0@@killMySelf
+    Purge fbc0@@codeFinaliser
+    Purge fbc0@@instruction, fbc0@@operantByte, fbc0@@operantWord, fbc0@@operantDWord, fbc0@@operantQWord, fbc0@@operantString, fbc0@@getToken
+    Restruc fbc0@@operantString
+  End Macro
+  Macro fbc0@@codeFinaliser
     stop
     temp                                uf4@@endLayer                           ;</code>
     fbc0@@lenString                     =                                       ( fbc0@@ptrString )
@@ -97,9 +78,20 @@ Macro code                              language
       uf4@@addYapterD                   fbc0@@yStrings,     null,               fbc0@@lenString,    fbc0@@lblString,    null
     End If
     uf4@@addYapterD                     fbc0@@yBytecode,    fbc0@@version,      fbc0@@lenMain,      fbc0@@ptrMain,      fbc0@@lblCode
-    Purge fbc0@@killMySelf, end?.code
   End Macro
+  fbc0@@uf4Token                        uf4@@getLayer
+  fbc0@@ptrString                       =                                       ( null )
+  fbc0@@lblString                       uf4@@allocateLayer                      ( fbc0@@lenString )
+  fbc0@@lblCode                         uf4@@allocateLayer                      ( null )
+  uf4@@newLayer                                                                 ;<code>
+    import 'fruitbot/assembly'
+    fbc0@@function                      '__main__',         fbc0@@lenMain,      null,               null
+    uf4@@newLayer
+      call                              ( fbc0@@ptrMain + fbc0@@lenString )
+      stop
+    uf4@@endLayer
 End Macro
-fbc0@@yStrings  uf4@@addUnlistedYapterType
-fbc0@@yBytecode uf4@@addUnlistedYapterType
+format@@addCodeSpace                    fbc0,                                   fbc0@@code
 
+fbc0@@yBytecode                         =                                       yapters@@bytecode
+fbc0@@yStrings                          =                                       yapters@@strings

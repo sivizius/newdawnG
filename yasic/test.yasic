@@ -11,9 +11,8 @@ add ()
 
 hello ((1+2),(3*4),(5/(7-6)))
 
-while 5+2
+while ( 5 + 2 )
   pushConstant ( 1 )
-  if 1
-    add ()
-  end if
+  pushConstant ( 2 )
+  add ()
 end while

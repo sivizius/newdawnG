@@ -9,14 +9,28 @@
   fbc0@@opMul                           =                                       0x12
   fbc0@@opDiv                           =                                       0x13
   fbc0@@opMod                           =                                       0x14
-  fbc0@@opLet                           =                                       0x20
+  fbc0@@opNot                           =                                       0x15
+  fbc0@@opAnd                           =                                       0x16
+  fbc0@@opOr                            =                                       0x17
+  fbc0@@opXor                           =                                       0x18
+  fbc0@@opLogicalNot                    =                                       0x19
+  fbc0@@opLogicalAnd                    =                                       0x1a
+  fbc0@@opLogicalOr                     =                                       0x1b
+  fbc0@@opLogicalXor                    =                                       0x1c
+  fbc0@@opShiftMore                     =                                       0x1d
+  fbc0@@opLogicalShiftMore              =                                       fbc0@@opShiftMore
+  fbc0@@opShiftLess                     =                                       0x1e
+  fbc0@@opLogicalShiftLess              =                                       0x1f
 
+
+  fbc0@@opLet                           =                                       0x20
   fbc0@@opCall                          =                                       0x21
   fbc0@@opWhen                          =                                       0x22
   fbc0@@opLoop                          =                                       0x23
   fbc0@@opNext                          =                                       0x24
   fbc0@@opBreak                         =                                       0x2e
   fbc0@@opDone                          =                                       0x2f
+
   fbc0@@opAllocGlobal                   =                                       0xfb
   fbc0@@opAllocLocal                    =                                       0xfc
   fbc0@@opAllocate                      =                                       0xfd
@@ -25,7 +39,7 @@
 ;}
 ;( function )
 ;{
-  fbc0@@lenFunctionHeader               =                                       32
+  fbc0@@lenFunctionHeader               =                                       16
   fbc0@@offFunctionInstruction          =                                       0x00
   fbc0@@offFunctionPadByte              =                                       0x01
   fbc0@@offFunctionSize                 =                                       0x02
@@ -33,8 +47,6 @@
   fbc0@@offFunctionNumArguments         =                                       0x06
   fbc0@@offFunctionMyName               =                                       0x08
   fbc0@@offFunctionPadDWord             =                                       0x0c
-  fbc0@@offFunctionBlankAddress         =                                       0x10
-  fbc0@@offFunctionPadQWord             =                                       0x18
 ;}
 
 Struc fbc0@@mnemonic                    instruction*
@@ -56,6 +68,22 @@ Struc fbc0@@mnemonic                    instruction*
     .                                   Equ                                     'div'
   Else If ( instruction = fbc0@@opMod )
     .                                   Equ                                     'mod'
+  Else If ( instruction = fbc0@@opNot )
+    .                                   Equ                                     'not'
+  Else If ( instruction = fbc0@@opAnd )
+    .                                   Equ                                     'and'
+  Else If ( instruction = fbc0@@opOr )
+    .                                   Equ                                     'or'
+  Else If ( instruction = fbc0@@opXor )
+    .                                   Equ                                     'xor'
+  Else If ( instruction = fbc0@@opLogicalNot )
+    .                                   Equ                                     'lnot'
+  Else If ( instruction = fbc0@@opLogicalAnd )
+    .                                   Equ                                     'land'
+  Else If ( instruction = fbc0@@opLogicalOr )
+    .                                   Equ                                     'lor'
+  Else If ( instruction = fbc0@@opLogicalXor )
+    .                                   Equ                                     'lxor'
   Else If ( instruction = fbc0@@opLet )
     .                                   Equ                                     'let'
   Else If ( instruction = fbc0@@opCall )
@@ -87,9 +115,10 @@ End Struc
 Macro fbc0@@disassemble                 context*, address*, size*, main*
   Local pointer, instruction, temp, lenght, char
   Local previousInstruction, previousValue
+  Local ptrFunction
   pointer                               =                                       null
   While ( pointer < size )
-    Load                                instruction byte                        from context:( address + pointer )
+    Load                                instruction byte                        From context:( address + pointer )
     If ( pointer = main )
       db '->'
     Else
@@ -102,19 +131,19 @@ Macro fbc0@@disassemble                 context*, address*, size*, main*
     db ' '
     pointer                             =                                       ( pointer + 1 )
     If ( instruction = fbc0@@opFunction )
-      Load                              temp dword                              from context:( address + pointer + fbc0@@offFunctionMyName - 1 )
+      Load                              temp dword                              From context:( address + pointer + fbc0@@offFunctionMyName - 1 )
       pointer                           =                                       ( pointer + fbc0@@lenFunctionHeader - 1 )
       If      ( disasm@@ptrStringYapter = null )
         fail '[fbc] there is no string-yapter'
       Else If (( temp < 2 ) | (( disasm@@lenStringYapter - temp ) < 0 ))
         fail '[fbc] pointer out of bonds'
       Else
-        Load                            lenght word                             from context:( disasm@@ptrStringYapter + temp - 2 )
+        Load                            lenght word                             From context:( disasm@@ptrStringYapter + temp - 2 )
         If (( disasm@@lenStringYapter - temp ) < lenght )
           fail '[fbc] corrupted string'
         End If
         Repeat ( lenght )
-          Load                          char byte                               from context:( disasm@@ptrStringYapter + temp + % - 1 )
+          Load                          char byte                               From context:( disasm@@ptrStringYapter + temp + % - 1 )
           db char
         End Repeat
         db ':'
@@ -124,22 +153,22 @@ Macro fbc0@@disassemble                 context*, address*, size*, main*
     End If
     If false
     Else If ( instruction = fbc0@@opPushByte )
-      Load                              temp byte                               from context:( address + pointer )
+      Load                              temp byte                               From context:( address + pointer )
       pointer                           =                                       ( pointer + 1 )
       db 'pushByte 0x'
       hb ( temp )
     Else If ( instruction = fbc0@@opPushWord )
-      Load                              temp word                               from context:( address + pointer )
+      Load                              temp word                               From context:( address + pointer )
       pointer                           =                                       ( pointer + 2 )
       db 'pushWord 0x'
       hw ( temp )
     Else If ( instruction = fbc0@@opPushDWord )
-      Load                              temp dword                              from context:( address + pointer )
+      Load                              temp dword                              From context:( address + pointer )
       pointer                           =                                       ( pointer + 4 )
       db 'pushDWord 0x'
       hd ( temp )
     Else If ( instruction = fbc0@@opPushQWord )
-      Load                              temp qword                              from context:( address + pointer )
+      Load                              temp qword                              From context:( address + pointer )
       pointer                           =                                       ( pointer + 8 )
       db 'pushQWord 0x'
       hq ( temp )
@@ -153,37 +182,53 @@ Macro fbc0@@disassemble                 context*, address*, size*, main*
       db 'div = pushConstant ( #1 / #2 )'
     Else If ( instruction = fbc0@@opMod )
       db 'mod = pushConstant ( #1 % #2 )'
+    Else If ( instruction = fbc0@@opNot )
+      db 'not = pushConstant ( ~ #1 )'
+    Else If ( instruction = fbc0@@opAnd )
+      db 'and = pushConstant ( #1 & #2 )'
+    Else If ( instruction = fbc0@@opOr )
+      db 'or = pushConstant ( #1 | #2 )'
+    Else If ( instruction = fbc0@@opXor )
+      db 'xor = pushConstant ( #1 ! #2 )'
+    Else If ( instruction = fbc0@@opLogicalNot )
+      db 'lnot = pushConstant ( not #1 )'
+    Else If ( instruction = fbc0@@opLogicalAnd )
+      db 'land = pushConstant ( #1 and #2 )'
+    Else If ( instruction = fbc0@@opLogicalOr )
+      db 'lor = pushConstant ( #1 or #2 )'
+    Else If ( instruction = fbc0@@opLogicalXor )
+      db 'lxor = pushConstant ( #1 xor #2 )'
     Else If ( instruction = fbc0@@opLet )
       db 'let value, type, uid'
     Else If ( instruction = fbc0@@opStop )
       db 'stop'
     Else If ( instruction = fbc0@@opCall )
       db 'call'
-;      If (( previousInstruction = fbc0@@opPushByte  ) | \
-;          ( previousInstruction = fbc0@@opPushWord  ) | \
-;          ( previousInstruction = fbc0@@opPushDWord ) | \
-;          ( previousInstruction = fbc0@@opPushQWord ))
-;        Load                            temp byte                               from context#:( address + previousValue )
-;        If ( temp = fbc0@@opFunction )
-;          Load                          temp qword                              from context#:( address + previousValue + 1 )
-;          If      ( disasm@@ptrStringYapter = null )
-;            fail '[fbc] there is no string-yapter'
-;          Else If (( temp < 2 ) | (( disasm@@lenStringYapter - temp ) < 0 ))
-;            fail '[fbc] pointer out of bonds'
-;          Else
-;            Load                        lenght word                             from context#:( disasm@@ptrStringYapter + temp - 2 )
-;            If (( disasm@@lenStringYapter - temp ) < lenght )
-;              fail '[fbc] corrupted string'
-;            End If
-;            db ' <'
-;            Repeat ( lenght )
-;              Load                      char byte                               from context#:( disasm@@ptrStringYapter + temp + % - 1 )
-;              db char
-;            End Repeat
-;            db '>'
-;          End If
-;        End If
-;      End If
+      If (( previousInstruction = fbc0@@opPushByte  ) | \
+          ( previousInstruction = fbc0@@opPushWord  ) | \
+          ( previousInstruction = fbc0@@opPushDWord ) | \
+          ( previousInstruction = fbc0@@opPushQWord ))
+        Load                            temp byte                               From context:( address + previousValue + fbc0@@offFunctionInstruction )
+        If ( temp = fbc0@@opFunction )
+          Load                          temp dword                              From context:( address + previousValue + fbc0@@offFunctionMyName )
+          If      ( disasm@@ptrStringYapter = null )
+            fail '[fbc] there is no string-yapter'
+          Else If (( temp < 2 ) | (( disasm@@lenStringYapter - temp ) < 0 ))
+            fail '[fbc] pointer out of bonds'
+          Else
+            Load                        lenght word                             From context:( disasm@@ptrStringYapter + temp - 2 )
+            If (( disasm@@lenStringYapter - temp ) < lenght )
+              fail '[fbc] corrupted string'
+            End If
+            db ' <'
+            Repeat ( lenght )
+              Load                      char byte                               From context:( disasm@@ptrStringYapter + temp + % - 1 )
+              db char
+            End Repeat
+            db '>'
+          End If
+        End If
+      End If
     Else If ( instruction = fbc0@@opFunction )
     Else If ( instruction = fbc0@@opAllocGlobal )
       db 'allocGlobal'
@@ -211,4 +256,9 @@ Macro fbc0@@disassemble                 context*, address*, size*, main*
     db 10
   End While
   display 'done', 10
+End Macro
+Macro fbc0@@killMySelf
+  fbc0@@killMySelf
+  Purge fbc0@@disassemble
+  Restruc fbc0@@mnemonic
 End Macro

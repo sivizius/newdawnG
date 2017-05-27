@@ -1,0 +1,29 @@
+;( predefined yapter-types )
+;{
+  yapters@@tFinal                       =                                       0
+  ;:  ---
+  yapters@@tTemporaryTypes              =                                       1                                       ;and above
+  ;:  temporary defined types
+  yapters@@tTypeCounter                 =                                       yapters@@tTemporaryTypes
+  ;:  ---
+  yapters@@tInvalidTypes                =                                       65536                                   ;and above
+;}
+Struc yapters@@addYapterType                yapters@@name*,         yapters@@func*,         yapters@@stop*
+  If ( yapters@@tTypeCounter >= yapters@@tInvalidTypes )
+    err '[asm:yapters] maximum number of yapter-types reached'
+  End If
+  yapters@@lstYapterTypes               Equ                                     yapters@@name,      yapters@@func,      yapters@@stop
+  .                                     =                                       ( yapters@@tTypeCounter )
+  yapters@@tTypeCounter                 =                                       ( yapters@@tTypeCounter + 1 )
+End Struc
+Struc yapters@@addUnlistedYapterType
+  If ( yapters@@tTypeCounter >= yapters@@tInvalidTypes )
+    err '[asm:yapters] maximum number of yapter-types reached'
+  End If
+  ;not directly accessable
+  .                                     =                                       ( yapters@@tTypeCounter )
+  yapters@@tTypeCounter                 =                                       ( yapters@@tTypeCounter + 1 )
+End Struc
+
+yapters@@strings  yapters@@addUnlistedYapterType
+yapters@@bytecode yapters@@addUnlistedYapterType

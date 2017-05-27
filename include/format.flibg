@@ -1,24 +1,66 @@
-Macro format@@addFormat               format@@name*,                          format@@func*,                          format@@stop*
-  format@@lstFormat                   Equ                                     format@@name,       format@@func,       format@@stop
+Macro format@@addFormat                 format@@name*,                          format@@func*,                          format@@stop*
+  format@@lstFormat                     Equ                                     format@@name,       format@@func,       format@@stop
 End Macro
-Macro format                          format@@name*,                          format@@args&
+Macro format@@addCodeSpace              name,                                   func*
+End Macro
+Macro format                            format@@name*,                          format@@args&
+  Local format@@lstCode
   display 'format: ', `format@@name, 10
-  Macro import                        module
-    eval                              'include ', "'include/", module, ".flibg'"
+  Macro import                          module
+    eval                                'include ', "'include/", module, ".flibg'"
   End Macro
-  Irpv                                format@@item,                           format@@lstFormat
-    Match                             format@@theName =, format@@theFunc =, format@@theStop,                          format@@item
-      Match                           `format@@theName,                       `format@@name
-        format@@theFunc               format@@args
+  Irpv                                  format@@item,                           format@@lstFormat
+    Match                               format@@theName =, format@@theFunc =, format@@theStop,                          format@@item
+      Match                             `format@@theName,                       `format@@name
+        format@@theFunc                 format@@args
         Macro format@@theFinal
           format@@theStop
         End Macro
       End Match
     End Match
   End Irpv
+  Macro format@@addCodeSpace            name*,                                  func*
+    format@@lstCode                     Equ                                     name func
+  End Macro
+  Macro format@@setCodeFinaliser
+  End Macro
+  Macro code                            language*,                              arguments&
+    Local item, nameCode, funcCode, done
+    done                                =                                       false
+    Irpv                                item,                                   format@@lstCode
+      Match                             nameCode funcCode,                      item
+        If ( `nameCode = `language )
+          display '<', `language, ':', `nameCode, '>', 10
+          display '{', 10
+          done                          =                                       true
+          Match                         any,                                    arguments
+            funcCode                    arguments
+          Else
+            funcCode
+          End Match
+        End If
+      Else
+        fail '[asm:format] cannot parse entry in list of code-spaces (u know, what i mean)'
+      End Match
+    End Irpv
+    If ( done = false )
+      fail < '[asm:format] unknown language »', `language, '«' >
+    End If
+    Macro end?.code!
+      format@@setCodeFinaliser
+      Purge format@@setCodeFinaliser
+      Purge format@@endCode
+      Purge end?.code
+    End Macro
+  End Macro
   Macro end?.format!
+    Local temp
     format@@theFinal
+    Irpv                                temp,                                   format@@lstCode
+      Restore format@@lstCode
+    End Irpv
     Purge import
+    Purge end?.format, code
   End Macro
 End Macro
 

@@ -1,0 +1,21 @@
+amd64@@hazModule                        Equ                                     -
+Macro amd64@@initModule
+  Match                                 -,                                      amd64@@hazModule
+    
+  End Match
+  amd64@@hazModule                      Equ                                     +
+  compile@@finishModules                Equ                                     amd64@@finishModule
+End Macro
+Macro amd64@ @finishModule
+  Match                                 +,                                      amd64@@hazModule
+  End Match
+  amd64@@hazModule                      Equ                                     -
+End Macro
+
+Macro amd64@@callModule                 function*
+  If      ( function = 0 )
+  ;Else If ( function =  )
+  Else
+    fail '[asm:module:amd64] unknown function'
+  End If
+End Macro

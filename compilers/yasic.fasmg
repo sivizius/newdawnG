@@ -9,6 +9,7 @@ format                                  uf4,                              128,  
   Else
     Err 10, '[yasic] fail: unknown version of fbc!', 10
   End Match
+  import 'yasic/assembly'
   code yasic
     Include yasic@@theInputFile
   end code

@@ -1,7 +1,7 @@
 ;( operators )
 ;{
-  enumerate ( 1 ),                      yasic@@opPrefixArithmeticNot, \         ; ~x
-                                        yasic@@opPrefixLogicNot, \              ; not x, ! x
+  enumerate ( 1 ),                      yasic@@opPrefixArithmeticNot, \         ; !x
+                                        yasic@@opPrefixLogicNot, \              ; not x
                                         yasic@@opPrefixNegative, \              ; - x
                                         yasic@@opPrefixPositive, \              ; + x
                                         yasic@@opAdd, \                         ; x + y
@@ -13,9 +13,9 @@
                                         yasic@@opArithmeticAnd, \               ; x & y
                                         yasic@@opArithmeticOr, \                ; x | y
                                         yasic@@opArithmeticXor, \               ; x ! y
-                                        yasic@@opLogicAnd, \                    ; x and y,  x && y
-                                        yasic@@opLogicOr, \                     ; x or y,   x || y
-                                        yasic@@opLogicXor, \                    ; x xor y,  x !! y
+                                        yasic@@opLogicAnd, \                    ; x and y
+                                        yasic@@opLogicOr, \                     ; x or y
+                                        yasic@@opLogicXor, \                    ; x xor y
                                         yasic@@opUnsignedShiftLeft, \           ; x << y
                                         yasic@@opUnsignedShiftRight, \          ; x >> y
                                         yasic@@opSignedShiftRight, \            ; x >>> y
@@ -35,9 +35,9 @@
 ;( operator precedence )
 ;{
 ;:  0x01  x = y
-;:  0x02  x || y
-;:  0x03  x !! y
-;:  0x04  x && y
+;:  0x02  x or y
+;:  0x03  x xor y
+;:  0x04  x and y
 ;:  0x05  x | y
 ;:  0x06  x ! y
 ;:  0x07  x & y
@@ -47,7 +47,7 @@
 ;:  0x0b  x + y, x - y
 ;:  0x0c  x * y, x / y, x % y
 ;:  0x0d  x ^ y
-;:  0x0e  +x, -x, ~x, !x, ++x, --x
+;:  0x0e  +x, -x, not x, !x, ++x, --x
 ;:  0x0f  x++, x--, ..
 ;}
 Macro yasic@@opDisplay                  operator*

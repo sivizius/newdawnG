@@ -11,7 +11,7 @@
 ;        break
 ;      end match
 ;    end while
-Macro pushExpression                    expression*
+Macro yasic@@pushExpression             expression*
   yasic@@parseExpression                expression
   yasic@@displayExpression
   yasic@@optimiseExpression

@@ -48,6 +48,7 @@ Macro while                             expression*
   yasic@@ifWhileState                   Equ                                     'while'
   uf4@@newLayer
   pushExpression                        expression
+  lnot
   break
 End Macro
 Macro end.while

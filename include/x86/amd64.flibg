@@ -1,0 +1,19 @@
+x86@@versionAMD64                       =                                       0x01
+Macro amd64@@code
+  Local ptrCode, lenCode
+  Local ptrMain
+  Macro format@@setCodeFinaliser
+    display '}', 10
+    amd64@@codeFinaliser
+  End Macro
+  Macro amd64@@codeFinaliser
+    Local temp
+    ptrMain                             uf4@@endLayer
+    temp                                uf4@@allocateLayer                      ( null )
+    lenCode                             =                                       ( temp - ptrCode )
+    uf4@@addYapterD                     yapters@@bytecode,  x86@@versionAMD64,  lenCode,  ptrMain,  ptrCode
+  End Macro
+  ptrCode                               uf4@@allocateLayer                      ( null )
+  uf4@@newLayer
+End Macro
+format@@addCodeSpace                    amd64,                                  amd64@@code
