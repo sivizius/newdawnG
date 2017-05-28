@@ -70,7 +70,7 @@ Macro code                              language
     import 'yasic/types'
     import 'yasic/variables'
   Else
-    err 10, '[asm:fbc0] unknown language »', `language, '«'
+    fail '[asm:fbc0] unknown language »', `language, '«'
   End Match
 End Macro
 Macro end?.code!

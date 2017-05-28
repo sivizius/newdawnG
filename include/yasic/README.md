@@ -20,7 +20,7 @@ You can declare a variable like this:
 
 Allowed types are `byte` (8 bit), `word` (16 bit), `dword` (32 bit) and `qword` (64 bit), but other types can be simply implemented with the `yasic@@newType` macro:
 ```
-  yasic@@newType newType, theSize
+  yasic@@newType newType, theSizeInBytes
 ```
 
 You can also define functions with a certain type of the return-value, parameters and optional parameters:
@@ -32,22 +32,13 @@ You can also define functions with a certain type of the return-value, parameter
   foobar(12,34)
 ```
 
-not yet entirely implemented
-----------------------------
-
-`if` is an fasmG-macro, so yasic has to use `@if` instead:
+Yasic now has conditionals like `while`, `if`, `elif` and `else`.
+But they are case-sensitive. You could use `If`  for conditionals at compile-time, like:
 ```
-  @if   cond
-  @elif cond
-  @else
-  end @if
-```
-
-You can use `if` for conditionals at compile-time, like:
-```
-  if __debug__
-    display 'this text will be shown at compile-time, but not at runtime!', 10
+  If __debug__
+     display 'this text will be shown at compile-time, but not at runtime!', 10
+  End If
+  if a = 1
+    aFunctionThatIsOnlyCalledIfAIstEqualToOneHolyShitThisNameIsHuge ()
   end if
 ```
-
-`while` and `repeat` are also 

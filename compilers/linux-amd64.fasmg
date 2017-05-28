@@ -33,13 +33,6 @@ Virtual                                 At null
     rb                                  ( yasic@@lenHelpStack )
 End Virtual
 
-Macro amd64@@defRegister                value*,                                 regs&
-  Local name, size
-  Irp < name, size >, regs
-    
-  End Irp
-End Macro
-
 Struc yasic@@popArgument                wantConstant:( false )
   Local tmp, op1, op2
   tmp yasic@@pop
@@ -52,13 +45,12 @@ Struc yasic@@popArgument                wantConstant:( false )
     If      ( tmp.value = fbc0@@opAdd )
       op2                               yasic@@popArgument                      wantConstant
       op1                               yasic@@popArgument                      wantConstant
-      If (( op1.type = fbc0@@tConstant ) & ( op2.type = fbc0@@tConstant ))
+      If      (( op1.type = fbc0@@tConstant ) & ( op2.type = fbc0@@tConstant ))
         .type                           =                                       fbc0@@tConstant
         .misc                           =                                       null
         .size                           =                                       null
         .value                          =                                       ( op1.value + op2.value )
       Else If ( wantConstant = false )
-        
       Else
         fail '[asm:compile] argument is not constant'
       End If
@@ -75,7 +67,7 @@ Struc yasic@@popArgument                wantConstant:( false )
         fail '[asm:compile] argument is not constant'
       End If
     Else
-      tmp fbc0@@mnemonic
+      tmp                               fbc0@@mnemonic
       fail < '[asm:compile] invalid operator: »', tmp, '«' >
     End if
   End If
@@ -296,36 +288,41 @@ Macro compile@@decode                   context*, address*, size*, main*
       myFunction                        =                                       temp.value
       Load                              temp byte                               From context:( ptrStart + myFunction + fbc0@@offFunctionInstruction )
       If ( temp = fbc0@@opFunction )
-        Load                            temp dword                              From context:( ptrStart + myFunction + fbc0@@offFunctionMyName )
-        If      ( compile@@ptrStringYapter = null )
-          fail '[asm:compile] there is no string-yapter'
-        Else If (( temp < 2 ) | (( compile@@lenStringYapter - temp ) < 0 ))
-          fail '[asm:compile] pointer out of bonds'
-        Else
-          Load                          lenght word                             From context:( compile@@ptrStringYapter + temp - 2 )
-          If (( compile@@lenStringYapter - temp ) < lenght )
-            fail '[asm:compile] corrupted string'
-          End If
-          displayDeep '#call '
-          Repeat ( lenght )
-            Load                        char byte                               From context:( compile@@ptrStringYapter + temp + % - 1 )
-            display char
-          End Repeat
-          display ' -> (0x'
-          displayHexWord ( myFunction )
-          display ')', 10
-          hazFunction                   =                                       nil
-          Repeat ( ctrFunctions ), offs:( null )
-            temp                        getFunction                             offs
-            If ( temp = function )
-              hazFunction               =                                       ctrFunction
-              Break
+        ;( only for debug )
+        ;{
+          Load                          temp dword                              From context:( ptrStart + myFunction + fbc0@@offFunctionMyName )
+          If      ( compile@@ptrStringYapter = null )
+            fail '[asm:compile] there is no string-yapter'
+          Else If (( temp < 2 ) | (( compile@@lenStringYapter - temp ) < 0 ))
+            fail '[asm:compile] pointer out of bonds'
+          Else
+            Load                        lenght word                             From context:( compile@@ptrStringYapter + temp - 2 )
+            If (( compile@@lenStringYapter - temp ) < lenght )
+              fail '[asm:compile] corrupted string'
             End If
-          End Repeat
-          If ( hazFunction = nil )
-            addFunction                 myFunction
+            displayDeep '#call '
+            Repeat ( lenght )
+              Load                      char byte                               From context:( compile@@ptrStringYapter + temp + % - 1 )
+              display char
+            End Repeat
+            display ' -> (0x'
+            displayHexWord ( myFunction )
+            display ')', 10
           End If
+        ;}
+        hazFunction                     =                                       nil
+        Repeat ( ctrFunctions ), offs:( null )
+          temp                          getFunction                             offs
+          If ( temp = function )
+            hazFunction                 =                                       ctrFunction
+            Break
+          End If
+        End Repeat
+        If ( hazFunction = nil )
+          addFunction                   myFunction
         End If
+        Load                            temp byte                               From context:( ptrStart + myFunction + fbc0@@offFunctionNumArguments )
+        
       Else
         fail '[asm:compile] this type of call is not implemented yet'
       End If
