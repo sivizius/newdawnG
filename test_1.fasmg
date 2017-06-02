@@ -1,0 +1,83 @@
+Macro displayHexQWord                   value*
+  Local                                 char
+  Repeat 16
+    char                                =                                       ( '0' + ((( value ) shr ( 64 - ( % * 4 ))) and 0x0f ))
+    If ( char > '9' )
+      char                              =                                       ( char + 'a' - '9' - 1 )
+    End If
+    display                             char
+  End Repeat
+End Macro
+Macro displayHexDWord                   value*
+  Local                                 char
+  Repeat 8
+    char                                =                                       ( '0' + ((( value ) shr ( 32 - ( % * 4 ))) and 0x0f ))
+    If ( char > '9' )
+      char                              =                                       ( char + 'a' - '9' - 1 )
+    End If
+    display                             char
+  End Repeat
+End Macro
+Macro displayHexWord                    value*
+  Local                                 char
+  Repeat 4
+    char                                =                                       ( '0' + ((( value ) shr ( 16 - ( % * 4 ))) and 0x0f ))
+    If ( char > '9' )
+      char                              =                                       ( char + 'a' - '9' - 1 )
+    End If
+    display                             char
+  End Repeat
+End Macro
+Macro displayHexByte                    value*
+  Local                                 char
+  Repeat 2
+    char                                =                                       ( '0' + ((( value ) shr (  8 - ( % * 4 ))) and 0x0f ))
+    If ( char > '9' )
+      char                              =                                       ( char + 'a' - '9' - 1 )
+    End If
+    display                             char
+  End Repeat
+End Macro
+Macro displayValue                      string*,                                value*
+  display string
+  displayHexQWord value
+  display 10
+End Macro
+
+
+Virtual At 0
+  Tree::
+  db 0, 2
+  db 0, 3
+  db 1, 4
+  db 0, 5
+  db 0, 6
+  db 1, 7
+  ptrTree = $
+  db 1, 8
+End Virtual
+Struc getTree
+  Local tmp, val
+  Load tmp byte From Tree:( ptrTree + 0 )
+  Load val byte From Tree:( ptrTree + 1 )
+  ptrTree = ( ptrTree - 2 )
+  If ( tmp = 1 )
+    .op2 getTree
+    .op1 getTree
+  End If
+  . = val
+End Struc
+
+this getTree
+displayValue 'this         0x', this
+displayValue 'this.op1     0x', this.op1
+displayValue 'this.op2     0x', this.op2
+displayValue 'this.op1.op1 0x', this.op1.op1
+displayValue 'this.op1.op2 0x', this.op1.op2
+displayValue 'this.op2.op1 0x', this.op2.op1
+displayValue 'this.op2.op2 0x', this.op2.op2
+
+temp = 0xff
+If ( temp = - 1 )
+  display 'negative', 10
+End If

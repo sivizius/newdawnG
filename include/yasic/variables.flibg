@@ -33,6 +33,7 @@ Macro yasic@@newType                    theType*,                               
     Local aParameter, restParameters, theParameters, lstParameters, numParameters
     Local type, parameter, default, hazDefault
     Match                               varName =( theParameters =),            declaration                   ;<function>
+      yasic@@@#varName#:
       Match                             +,                                      yasic@@global
         Macro varName                   arguments&
           Local anArgument, restArguments, theArguments, lstArguments

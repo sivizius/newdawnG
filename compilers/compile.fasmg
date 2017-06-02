@@ -1,0 +1,578 @@
+Include 'include/display.flibg'
+Include 'include/fruitbot/version_0.flibg'
+Include 'include/fruitbot/opcodes.flibg'
+Include 'include/yasic/queque.flibg'
+Include 'include/yasic/stack.flibg'
+
+Virtual                                 At null
+  yasic@@lblQueque::
+    rb                                  ( yasic@@lenQueque )
+End Virtual
+Virtual                                 At null
+  yasic@@lblStack::
+    rb                                  ( yasic@@lenStack )
+End Virtual
+Virtual                                 At null
+  yasic@@lblHelpStack::
+    rb                                  ( yasic@@lenHelpStack )
+End Virtual
+
+;( pop arguments and, if necessary, generate code to calculate them )
+;{
+  compile@@ptrTree                      =                                       null
+  compile@@sizeTree                     =                                       ( 16 )
+  compile@@lenTree                      =                                       ( 4096 * compile@@sizeTree )
+  Virtual                               At null
+    compile@@lblTree::
+      rb                                ( compile@@lenTree )
+      ;:0x00    byte  type (const, variable, add, sub, ...)
+      ;:0x01    byte  null
+      ;:0x02    word  ershov
+      ;:0x04    dword *down
+      ;:union
+      ;{
+      ;:  0x08  dword *east
+      ;:  0x0c  dword *west
+      ;}{
+      ;:  0x08  qword value
+      ;}
+  End Virtual
+  
+  Struc compile@@addTreeNode            instruction*,       east*,              west*
+    Local ershovEast, ershovWest
+    If (( compile@@ptrTree >= compile@@lenTree ) | ( compile@@ptrTree < null ))
+      fail '[asm:compile] could not add node to tree, because compile@@ptrTree is out of bonds. adjust compile@@lenTree'
+    End If
+    If (( east < null ) | ( east >= compile@@ptrTree ))
+      fail '[asm:compile] invalid value of *east'
+    End If
+    If (( west < null ) | ( west >= compile@@ptrTree ))
+      fail '[asm:compile] invalid value of *west'
+    End If
+    Store                               byte  instruction                       At    compile@@lblTree:( compile@@ptrTree + 0x00 )
+    Store                               dword east                              At    compile@@lblTree:( compile@@ptrTree + 0x08 )
+    Store                               dword west                              At    compile@@lblTree:( compile@@ptrTree + 0x0c )
+    Store                               dword compile@@ptrTree                  At    compile@@lblTree:( east             + 0x04 )
+    Store                               dword compile@@ptrTree                  At    compile@@lblTree:( west             + 0x04 )
+    ; https://en.wikipedia.org/wiki/Ershov_Number
+    Load                                ershovEast word                         From  compile@@lblTree:( east             + 0x02 )
+    Load                                ershovWest word                         From  compile@@lblTree:( west             + 0x02 )
+    If      ( ershovEast > ershovWest )
+      Store                             word  ( ershovEast )                    At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+    Else If ( ershovEast < ershovWest )
+      Store                             word  ( ershovWest )                    At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+    Else If ( ershovEast = ershovWest )
+      Store                             word  ( ershovEast + 1 )                At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+    End If
+    .                                   =                                       compile@@ptrTree
+    compile@@ptrTree                    =                                       ( compile@@ptrTree + compile@@sizeTree )
+  End Struc
+  compile@@thisLeafIsEast               =                                       ( true )                                ;this is a constant
+  compile@@thisLeafIsWest               =                                       ( true )                                ;this is a constant
+  Struc compile@@addTreeLeaf            type*,                                  value*,                                 side*
+    If      ( type = fbc0@@tConstant )
+      If ( side = compile@@thisLeafIsEast )
+        If ( compile@@hazCalcWithConst )
+          Store                         word  0                                 At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+        Else
+          Store                         word  1                                 At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+        End If
+      Else
+        Store                           word  1                                 At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+      End If
+    Else If ( type = fbc0@@tVariable )
+      If ( side = compile@@thisLeafIsEast )
+        If ( compile@@hazCalcWithVars )
+          Store                         word  0                                 At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+        Else
+          Store                         word  1                                 At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+        End If
+      Else
+        Store                           word  1                                 At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+      End If
+    Else
+      fail '[asm:compile] only could add constant leafs or variables yet'
+    End If
+    Store                               byte  type                              At    compile@@lblTree:( compile@@ptrTree + 0x00 )
+    Store                               qword value                             At    compile@@lblTree:( compile@@ptrTree + 0x08 )
+    .                                   =                                       compile@@ptrTree
+    compile@@ptrTree                    =                                       ( compile@@ptrTree + compile@@sizeTree )
+  End Struc
+  compile@@wantConstantArgument         =                                       ( true )                                ;this is a constant for functions, that want a constant value as argument.
+  Struc compile@@popArgument            wantConstant:( false )
+    Local tmp, tmp.type, tmp.value
+    Local op1, op1.type, op1.value
+    Local op2, op2.type, op2.value
+    tmp                                 yasic@@pop
+    If      ( tmp.type = fbc0@@tConstant )
+      .type                             =                                       fbc0@@tConstant
+      .value                            =                                       tmp.value
+    Else if ( tmp.type = fbc0@@tOperator )
+      ;:note: a ∘ b -> a b ∘ ->
+      ;> push a
+      ;> push b
+      ;> instruction
+      ;:->
+      ;> pop op2 = b
+      ;> pop op1 = a
+      If      ( tmp.value = fbc0@@opAdd )                                       ;< op1 + op2 >
+        op2                             yasic@@popArgument                      wantConstant
+        op1                             yasic@@popArgument                      wantConstant
+        If      (( op1.type = fbc0@@tConstant ) & ( op2.type = fbc0@@tConstant ))
+          .type                         =                                       fbc0@@tConstant
+          .value                        =                                       ( op1.value + op2.value )
+        Else If ( wantConstant = false )
+          If      (( op1.type = fbc0@@tConstant ) & ( op1.value = null ))       ;< 0 + op2 = op2 >
+            .type                       =                                       op2.type
+            .value                      =                                       op2.value
+          Else If (( op2.type = fbc0@@tConstant ) & ( op2.value = null ))       ;< op1 + 0 = op1 >
+            .type                       =                                       op1.type
+            .value                      =                                       op1.value
+          Else
+            op1                         compile@@addTreeLeaf                    op1.type,           op1.value,          compile@@thisLeafIsEast
+            op2                         compile@@addTreeLeaf                    op2.type,           op2.value,          compile@@thisLeafIsWest
+            .type                       =                                       fbc0@@tTreeNode
+            .value                      compile@@addTreeNode                    tmp.value,          op1,                op2
+          End If
+        Else
+          fail '[asm:compile] argument is not constant'
+        End If
+      Else If ( tmp.value = fbc0@@opSub )                                       ;< op1 - op2 >
+        op2                             yasic@@popArgument                      wantConstant
+        op1                             yasic@@popArgument                      wantConstant
+        If      (( .op1.type = fbc0@@tConstant ) & ( .op2.type = fbc0@@tConstant ))
+          .type                         =                                       fbc0@@tConstant
+          .value                        =                                       ( op1.value - op2.value )
+        Else If ( wantConstant = false )
+          .type                         =                                       fbc0@@tTreeNode
+          .value                        =                                       tmp.value
+        Else
+          fail '[asm:compile] argument is not constant'
+        End If
+      Else If ( tmp.value = fbc0@@opMul )                                       ;< op1 * op2 >
+        op2                             yasic@@popArgument                      wantConstant
+        op1                             yasic@@popArgument                      wantConstant
+        If      (( op1.type = fbc0@@tConstant ) & ( op2.type = fbc0@@tConstant ))
+          .type                         =                                       fbc0@@tConstant
+          .value                        =                                       ( op1.value * op2.value )
+        Else if (( op1.type = fbc0@@tConstant ) & ( op1.value = null ))
+          .type                         =                                       fbc0@@tConstant
+          .value                        =                                       ( null )
+        Else if (( op2.type = fbc0@@tConstant ) & ( op2.value = null ))
+          .type                         =                                       fbc0@@tConstant
+          .value                        =                                       ( null )
+        Else If ( wantConstant = false )
+          .type                         =                                       fbc0@@tTreeNode
+          .value                        =                                       tmp.value
+        Else
+          fail '[asm:compile] argument is not constant'
+        End If
+      Else If ( tmp.value = fbc0@@opDiv )                                       ;< op1 / op2 >
+        op2                             yasic@@popArgument                      wantConstant
+        op1                             yasic@@popArgument                      wantConstant
+        If      (( op1.type = fbc0@@tConstant ) & ( op2.type = fbc0@@tConstant ))
+          .type                         =                                       fbc0@@tConstant
+          .value                        =                                       ( op1.value / op2.value )
+        Else if (( op1.type = fbc0@@tConstant ) & ( op1.value = null ))
+          .type                         =                                       fbc0@@tConstant
+          .value                        =                                       ( null )
+        Else if (( op2.type = fbc0@@tConstant ) & ( op2.value = null ))
+          fail '[asm:compile] division by zero'
+        Else If ( wantConstant = false )
+          .type                         =                                       fbc0@@tTreeNode
+          .value                        =                                       tmp.value
+        Else
+          fail '[asm:compile] argument is not constant'
+        End If
+      Else
+        tmp                             fbc0@@mnemonic
+        fail < '[asm:compile] invalid operator: »', tmp, '«' >
+      End if
+    End If
+  End Struc
+;}
+;( calls in code )
+;{
+  ;:e.g. if-statements in fbc are implemented as:
+  ;> anonymous_if:
+  ;>   ;do stuff
+  ;>  done
+  ;> ...
+  ;> branch anonymous_if
+  ;> ...
+  ;:but in machine-code they are usually inlined with conditional jumps, so the compiler has to jump there, compile it and return.
+  ;:to store and load addresses and other stuff, you should use compile@@pushCall and compile@@popCall.
+  Struc compile@@pushCall               theAddress*,                            ctrArguments:( null )
+    If ( compile@@ptrCallStack >= compile@@lenCallStack )
+      fail '[asm:compile] call-stack to small. adjust compile@@lenCallStack'
+    End If
+    Store                               dword .                                 At compile@@lblCallStack:( compile@@ptrCallStack + 0x00 )
+    Store                               dword ctrArguments                      At compile@@lblCallStack:( compile@@ptrCallStack + 0x04 )
+    Store                               dword yasic@@ptrQueque                  At compile@@lblCallStack:( compile@@ptrCallStack + 0x08 )
+    Store                               dword yasic@@ptrStack                   At compile@@lblCallStack:( compile@@ptrCallStack + 0x0c )
+    compile@@ptrCallStack               =                                       ( compile@@ptrCallStack + compile@@sizeCallStack )
+    .                                   =                                       theAddress
+  End Struc
+  Struc compile@@peekCall               offs:( null )
+    If ( compile@@ptrCallStack < null )
+      fail '[asm:compile] call-stack is empty'
+    End If
+    Local theAddress, ctrArguments, ptrQueque, ptrStack
+    Load                                theAddress   dword                      From compile@@lblCallStack:( compile@@ptrCallStack - ( compile@@sizeCallStack * offs ) + 0x00 )
+    Load                                ctrArguments dword                      From compile@@lblCallStack:( compile@@ptrCallStack - ( compile@@sizeCallStack * offs ) + 0x04 )
+    Load                                ptrQueque    dword                      From compile@@lblCallStack:( compile@@ptrCallStack - ( compile@@sizeCallStack * offs ) + 0x08 )
+    Load                                ptrStack     dword                      From compile@@lblCallStack:( compile@@ptrCallStack - ( compile@@sizeCallStack * offs ) + 0x0c )
+    .theAddress                         =                                       theAddress
+    .ctrArguments                       =                                       ctrArguments
+    .ptrQueque                          =                                       ptrQueque
+    .ptrStack                           =                                       ptrStack
+  End Struc
+  Struc compile@@popCall
+    Local temp
+    compile@@ptrCallStack               =                                       ( compile@@ptrCallStack - compile@@sizeCallStack )
+    temp                                compile@@peekCall
+    .theAddress                         =                                       temp.theAddress
+    .ctrArguments                       =                                       temp.ctrArguments
+    .ptrQueque                          =                                       temp.ptrQueque
+    .ptrStack                           =                                       temp.ptrStack
+  End Struc
+  Virtual                               At null
+    compile@@lblCallStack::
+      rb                                ( compile@@lenCallStack )
+  End Virtual
+;}
+;( modules )
+;{
+  compile@@initModules                  Equ
+  compile@@finishModules                Equ
+  ;:this will only load modules, but it will do not initalise them.
+  Include 'modules/linux/echo.fmodg'
+;}
+Macro compile@@decode                   context*, address*, size*, main*
+  Local lblFunctions, theFunctions, ctrFunctions, numFunctions, sizeFunctions
+  Local getFunction, addFunction
+  Local hazFunction, callFunction
+  Local numArguments
+  Local lblJumps, ctrJumps, numJumps, sizeJumps, addJump
+  Local operator
+  Local ptrBase, ptrStop, ptrMain
+  Local instruction, temp, lenght, char
+  Local deepness
+  Local maxErshov, ctr
+  ctrFunctions                          =                                       null
+  theFunctions                          =                                       null
+  sizeFunctions                         =                                       4
+  Virtual                               At null
+    lblFunctions::
+      RD                                numFunctions                            ;fbc address
+  End Virtual
+  Struc getFunction                     offs*
+    Local temp
+    Load                                temp dword                              From lblFunctions:( offs * sizeFunctions )
+    .                                   =                                       ( temp )
+  End Struc
+  Macro addFunction                     fbcAddress*
+    Store                               dword fbcAddress                        At lblFunctions:( ctrFunctions * sizeFunctions )
+    ctrFunctions                        =                                       ( ctrFunctions + 1 )
+  End Macro
+  ctrJumps                              =                                       null
+  sizeJumps                             =                                       8
+  Virtual                               At null
+    lblJumps::
+      RD                                numJumps                                ;fbc address
+      RD                                numJumps                                ;new address
+  End Virtual
+  Macro addJump                         fbcAddress*,                            newAddress*
+    Store                               dword fbcAddress                        At lblJumps:(( ctrJumps * sizeJumps ) + 0x00 )
+    Store                               dword newAddress                        At lblJumps:(( ctrJumps * sizeJumps ) + 0x04 )
+    ctrJumps                            =                                       ( ctrJumps + 1 )
+  End Macro
+  Macro operator                        name*,                                  value*
+    If ( yasic@@ptrStack < 32 )
+      fail < '[asm:compile] ', name, ' need 2 arguments in stack' >
+    End If
+    displayDeep '#', name, 10
+    yasic@@push                         fbc0@@tOperator,                        ( value )
+  End Macro
+  ptrBase                               =                                       ( address )
+  ptrStop                               =                                       ( address + size )
+  If (( main >= null ) & ( main < size ))
+    ptrMain                             =                                       ( ptrBase + main )
+  Else
+    ptrMain                             =                                       ( ptrBase )
+  End If
+  Macro displayDeep                     string&
+    Repeat ( deepness )
+      display '  '
+    End Repeat
+    display string
+  End Macro
+  deepness                              =                                       1
+  While ( true )
+    If (( ptrMain < ptrBase ) | ( ptrMain >= ptrStop ))
+      fail '[asm:compile] invalid instruction-pointer'
+    End If
+    Load                                instruction byte                        From context:( ptrMain )
+    ;display 'addr: 0x'
+    ;displayHexWord ptrMain
+    ;display ': '
+    ptrMain                             =                                       ( ptrMain + 1 )
+    ;displayValue 'inst: 0x', instruction
+    If      ( instruction = fbc0@@opPushByte )
+      Load                              temp byte                               From context:( ptrMain )
+      displayDeep '#pushByte 0x'
+      displayHexByte temp
+      display 10
+      ptrMain                           =                                       ( ptrMain + 1 )
+      yasic@@push                       fbc0@@tConstant,                        ((( temp and 0x00000080 ) * 0xffffffffffffff00 ) or temp )
+    Else If ( instruction = fbc0@@opPushWord )
+      Load                              temp word                               From context:( ptrMain )
+      displayDeep '#pushWord 0x'
+      displayHexWord temp
+      display 10
+      ptrMain                           =                                       ( ptrMain + 2 )
+      yasic@@push                       fbc0@@tConstant,                        ((( temp and 0x00008000 ) * 0xffffffffffff0000 ) or temp )
+    Else If ( instruction = fbc0@@opPushDWord )
+      Load                              temp dword                              From context:( ptrMain )
+      displayDeep '#pushDWord 0x'
+      displayHexDWord temp
+      display 10
+      ptrMain                           =                                       ( ptrMain + 4 )
+      yasic@@push                       fbc0@@tConstant,                        ((( temp and 0x80000000 ) * 0xffffffff00000000 ) or temp )
+    Else If ( instruction = fbc0@@opPushQWord )
+      Load                              temp qword                              From context:( ptrMain )
+      displayDeep '#pushQWord 0x'
+      displayHexQWord temp
+      display 10
+      ptrMain                           =                                       ( ptrMain + 8 )
+      yasic@@push                       fbc0@@tConstant,                        ( temp )
+    Else If ( instruction = fbc0@@opAdd )
+      operator                          'add',                                  instruction
+    Else If ( instruction = fbc0@@opSub )
+      operator                          'sub',                                  instruction
+    Else If ( instruction = fbc0@@opMul )
+      operator                          'mul',                                  instruction
+    Else If ( instruction = fbc0@@opDiv )
+      operator                          'div',                                  instruction
+    Else If ( instruction = fbc0@@opMod )
+      operator                          'mod',                                  instruction
+    Else If ( instruction = fbc0@@opNot )
+      operator                          'not',                                  instruction
+    Else If ( instruction = fbc0@@opAnd )
+      operator                          'and',                                  instruction
+    Else If ( instruction = fbc0@@opOr )
+      operator                          'or',                                   instruction
+    Else If ( instruction = fbc0@@opXor )
+      operator                          'xor',                                  instruction
+    Else If ( instruction = fbc0@@opLogicalNot )
+      operator                          'lnot',                                 instruction
+    Else If ( instruction = fbc0@@opLogicalAnd )
+      operator                          'land',                                 instruction
+    Else If ( instruction = fbc0@@opLogicalOr )
+      operator                          'lor',                                  instruction
+    Else If ( instruction = fbc0@@opLogicalXor )
+      operator                          'lxor',                                 instruction
+    Else If ( instruction = fbc0@@opFunction )
+      Load                              temp dword                              From context:( ptrMain + fbc0@@offFunctionMyName - 1 )
+      If      ( compile@@ptrStringYapter = null )
+        fail '[asm:compile] there is no string-yapter'
+      Else If (( temp < 2 ) | (( compile@@lenStringYapter - temp ) < 0 ))
+        fail '[asm:compile] pointer out of bonds'
+      Else
+        Load                            lenght word                             From context:( compile@@ptrStringYapter + temp - 2 )
+        If (( compile@@lenStringYapter - temp ) < lenght )
+          fail '[asm:compile] corrupted string'
+        End If
+        displayDeep ''
+        Repeat ( lenght )
+          Load                          char byte                               From context:( compile@@ptrStringYapter + temp + % - 1 )
+          display char
+        End Repeat
+        display '()', 10
+        displayDeep '{', 10
+        deepness                        =                                       ( deepness + 1 )
+        ptrMain                         =                                       ( ptrMain + fbc0@@lenFunctionHeader - 1 )
+      End If
+    Else If ( instruction = fbc0@@opLoop )
+      temp                              compile@@popArgument                    compile@@wantConstantArgument
+      displayDeep '#loop', 10
+      displayDeep '#{', 10
+      deepness                          =                                       ( deepness + 1 )
+      ptrMain                           compile@@pushCall                       ( temp.value + ptrBase )
+    Else If ( instruction = fbc0@@opBreak )
+      displayDeep                       '#break', 10
+    Else If ( instruction = fbc0@@opDone )
+      deepness                          =                                       ( deepness - 1 )
+      displayDeep '#}', 10
+      temp                              compile@@popCall
+;      If (( temp.ptrStack - yasic@@ptrStack ) = temp.ctrArguments * 16 )
+;        fail '[asm:compile] stack-pointer after call must be equal to stack-pointer before call minus arguments'
+;      End If
+      ptrMain                           =                                       ( temp.theAddress )
+      yasic@@ptrQueque                  =                                       ( temp.ptrQueque )
+    Else If ( instruction = fbc0@@opAllocLocal )
+      displayDeep '#allocLocal', 10
+    Else If ( instruction = fbc0@@opLet )
+      displayDeep '#let', 10
+    Else If ( instruction = fbc0@@opCall )
+      temp                              compile@@popArgument                    compile@@wantConstantArgument
+      callFunction                      =                                       temp.value
+      Load                              temp byte                               From context:( ptrBase + callFunction + fbc0@@offFunctionInstruction )
+      If ( temp = fbc0@@opFunction )
+        ;( only for debug )
+        ;{
+          Load                          temp dword                              From context:( ptrBase + callFunction + fbc0@@offFunctionMyName )
+          If      ( compile@@ptrStringYapter = null )
+            fail '[asm:compile] there is no string-yapter'
+          Else If (( temp < 2 ) | (( compile@@lenStringYapter - temp ) < 0 ))
+            fail '[asm:compile] pointer out of bonds'
+          Else
+            Load                        lenght word                             From context:( compile@@ptrStringYapter + temp - 2 )
+            If (( compile@@lenStringYapter - temp ) < lenght )
+              fail '[asm:compile] corrupted string'
+            End If
+            displayDeep '#call '
+            Repeat ( lenght )
+              Load                      char byte                               From context:( compile@@ptrStringYapter + temp + % - 1 )
+              display char
+            End Repeat
+            display ' -> (0x'
+            displayHexWord ( myFunction )
+            display ')', 10
+          End If
+        ;}
+        ;( is function already in the list? append it if not )
+        ;{
+          hazFunction                   =                                       nil
+          Repeat ( ctrFunctions ), offs:( null )
+            temp                        getFunction                             offs
+            If ( temp = callFunction )
+              hazFunction               =                                       ctrFunction
+              Break
+            End If
+          End Repeat
+          If ( hazFunction = nil )
+            addFunction                 callFunction
+          End If
+        ;}
+        ;( get number of arguments )
+        ;{
+          Load                          numArguments word                       From context:( ptrBase + callFunction + fbc0@@offFunctionNumArguments )
+          If ( numArguments = 0xffff )  ;first constant value in stack is the number of arguments
+            numArguments                compile@@popArgument                    compile@@wantConstantArgument
+          End If
+        ;}
+        ;( get maximal ershov-number )
+        ;{
+          If ( yasic@@numOfArgumentsInRegister )
+            maxErshov                   =                                       ( yasic@@numOfArgumentsInRegister )
+            Repeat ( numArguments ), ctr:( null )
+              arg#ctr                   compile@@popArgument
+              If ( maxErshov < arg#ctr#.ershov )
+                maxErshov               =                                       arg#ctr#.ershov
+              End If
+            End Repeat
+          End If
+        ;}
+      Else
+        fail '[asm:compile] this type of call is not implemented yet'
+      End If
+    Else If ( instruction = fbc0@@opStop )
+      deepness                          =                                       ( deepness - 1 )
+      displayDeep '}', 10
+      If ( theFunctions = ctrFunctions )
+        Break
+      Else
+        temp                            getFunction                             theFunctions
+        If (( temp >= null ) & ( temp < size ))
+          ptrMain                       =                                       ( ptrBase + temp )
+          theFunctions                  =                                       ( theFunctions + 1 )
+        Else
+          fail '[asm:compile] uhm, thats weird'
+        End If
+      End If
+    Else
+      temp                              fbc0@@mnemonic                          instruction
+      displayValue 'instruction: 0x', instruction
+      fail < '[asm:compile] invalid instruction: »', temp, '«' >
+    End If
+  End While
+  Purge operator
+  numFunctions                          =                                       ( ctrFunctions )
+  numJumps                              =                                       ( ctrJumps )
+End Macro
+Macro compile@@buildYapter              address,  type,     size,     resv,     misc,     pointer,  dword0,   dword1,   dword2,   lblInputFile
+  If ( compile@@lenMagic = 0 )
+    compile@@lenMagic                   =                                       ( address )
+    Repeat ( compile@@lenMagic )
+      Load                              char byte                               From lblInputFile:( % - 1 )
+      db                                char
+    End Repeat
+  End If
+  If      ( type = null )
+    compile@@ycontent                   =                                       ( address + 16 )
+    Break
+  Else If ( type = fbc0@@yBytecode )
+    ;type : machine : size : main : pointer
+    uf4@@newLayer
+      Repeat ( dword0 ), offs:( 0 )
+        Load                            char byte                               From lblInputFile:( compile@@ycontent + dword2 + offs )
+        db                              char
+      End Repeat
+    temp                                uf4@@endLayer
+    uf4@@addYapterD                     type,     size,     temp.size,          dword1,             temp
+  Else If ( type = fbc0@@yStrings )
+    ;type : null : size : null : pointer
+    uf4@@newLayer
+      Repeat ( dword0 ), offs:( 0 )
+        Load                            char byte                               From lblInputFile:( compile@@ycontent + dword2 + offs )
+        db                              char
+      End Repeat
+    temp                                uf4@@endLayer
+    uf4@@addYapterD                     type,     size,     temp.size,          dword1,             temp
+    compile@@ptrStringYapter            =                                       ( compile@@ycontent + dword2 )
+    compile@@lenStringYapter            =                                       dword0
+;    displayValue '*0x', compile@@ptrStringYapter
+  Else
+    displayValue 'type: 0x', type
+    fail '[asm:compile] unknown yapter-type'
+  End If
+End Macro
+Macro compile@@loadYapter               address,  type,     size,     resv,     misc,     pointer,  dword0,   dword1,   dword2,   lblInputFile
+  Local offs, lenght, char
+  If      ( type = null )
+    Break
+  Else If ( type = fbc0@@yBytecode )
+    If ( size = fbc0@@version )
+      code amd64
+        compile@@decode                 lblInputFile,                           ( dword2 + compile@@ycontent ),         dword0,   dword1
+      end code
+    End If
+  Else If ( type = fbc0@@yStrings )
+  End If
+End Macro
+
+Macro compile@@parse                    numArgsInRegs:( null ),       \
+                                        lenQueque:( 4096 ),           \
+                                        lenStack:( 4096 ),            \
+                                        lenCallStack:( 4096 )
+  compile@@ptrStringYapter              =                                       null
+  compile@@lenStringYapter              =                                       null
+  compile@@lenMagic                     =                                       null
+  yasic@@lenQueque                      =                                       ( lenQueque * 16 )
+  yasic@@ptrQueque                      =                                       null
+  yasic@@endQueque                      =                                       null
+  yasic@@lenStack                       =                                       ( lenStack * 16 )
+  yasic@@ptrStack                       =                                       null
+  yasic@@topStack                       =                                       null
+  yasic@@lenHelpStack                   =                                       ( lenStack * 16 )
+  yasic@@ptrHelpStack                   =                                       null
+  yasic@@topHelpStack                   =                                       null
+  compile@@sizeCallStack                =                                       ( 16 )
+  compile@@lenCallStack                 =                                       ( lenCallStack * compile@@sizeCallStack )
+  compile@@ptrCallStack                 =                                       null
+  compile@@numOfArgsInRegs              =                                       ( numArgsInRegs )                       ;number of arguments passed via register, the rest via stack
+  compile@@hazCalcWithConst             =                                       ( false )                               ;is `add r1, 0x13372342` allowed?
+  compile@@hazCalcWithVars              =                                       ( false )                               ;is `add r1, byte [ a ]` allowed?
+  uf4@@parseFile                        compile@@theInputFile,                  compile@@buildYapter,                   compile@@loadYapter
+End Macro
