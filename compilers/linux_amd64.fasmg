@@ -1,8 +1,9 @@
 Include 'include/main.flibg'
 Include 'include/format.flibg'
 Include 'include/compile.flibg'
+
 format                                  uf4,                                    128,                                    ( 4096 * 4096 )
   import 'display'
   import 'x86/amd64'
-  compile@@parse
+  amd64@@compile                        'linux'
 end format

@@ -1,2 +1,0 @@
-include 'tool.fincg'
-parse '../test_1.fasmg'

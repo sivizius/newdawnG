@@ -1,0 +1,57 @@
+;( calls in code )
+;{
+  ;:e.g. if-statements in fbc are implemented as:
+  ;> anonymous_if:
+  ;>   ;do stuff
+  ;>  done
+  ;> ...
+  ;> branch anonymous_if
+  ;> ...
+  ;:but in machine-code they are usually inlined with conditional jumps, so the compiler has to jump there, compile it and return.
+  ;:to store and load addresses and other stuff, you should use compile@@pushCall and compile@@popCall.
+  compile@@sizeCallStack                =                                       ( 16 )
+  compile@@maxCallStack                 =                                       null
+  compile@@ptrCallStack                 =                                       null
+  Postpone
+    compile@@lenCallStack               =                                       compile@@maxCallStack
+  End Postpone
+  displayValue 'lenCallStack  = 0x', compile@@lenCallStack
+  Virtual                               At null
+    compile@@lblCallStack::
+      RB                                ( compile@@lenCallStack )
+  End Virtual
+  Struc compile@@pushCall               theAddress*,                            ctrArguments:( null )
+    If ( compile@@ptrCallStack >= compile@@maxCallStack )
+      compile@@maxCallStack             =                                       ( compile@@ptrCallStack + compile@@sizeCallStack )
+    End If
+    Store                               dword .                                 At compile@@lblCallStack:( compile@@ptrCallStack + 0x00 )
+    Store                               dword ctrArguments                      At compile@@lblCallStack:( compile@@ptrCallStack + 0x04 )
+    Store                               dword compile@@ptrQueque                At compile@@lblCallStack:( compile@@ptrCallStack + 0x08 )
+    Store                               dword compile@@ptrStack                 At compile@@lblCallStack:( compile@@ptrCallStack + 0x0c )
+    compile@@ptrCallStack               =                                       ( compile@@ptrCallStack + compile@@sizeCallStack )
+    .                                   =                                       theAddress
+  End Struc
+  Struc compile@@peekCall               offs:( null )
+    If ( compile@@ptrCallStack < null )
+      fail '[asm:compile] call-stack is empty'
+    End If
+    Local theAddress, ctrArguments, ptrQueque, ptrStack
+    Load                                theAddress   dword                      From compile@@lblCallStack:( compile@@ptrCallStack - ( compile@@sizeCallStack * offs ) + 0x00 )
+    Load                                ctrArguments dword                      From compile@@lblCallStack:( compile@@ptrCallStack - ( compile@@sizeCallStack * offs ) + 0x04 )
+    Load                                ptrQueque    dword                      From compile@@lblCallStack:( compile@@ptrCallStack - ( compile@@sizeCallStack * offs ) + 0x08 )
+    Load                                ptrStack     dword                      From compile@@lblCallStack:( compile@@ptrCallStack - ( compile@@sizeCallStack * offs ) + 0x0c )
+    .theAddress                         =                                       theAddress
+    .ctrArguments                       =                                       ctrArguments
+    .ptrQueque                          =                                       ptrQueque
+    .ptrStack                           =                                       ptrStack
+  End Struc
+  Struc compile@@popCall
+    Local temp
+    compile@@ptrCallStack               =                                       ( compile@@ptrCallStack - compile@@sizeCallStack )
+    temp                                compile@@peekCall
+    .theAddress                         =                                       temp.theAddress
+    .ctrArguments                       =                                       temp.ctrArguments
+    .ptrQueque                          =                                       temp.ptrQueque
+    .ptrStack                           =                                       temp.ptrStack
+  End Struc
+;}

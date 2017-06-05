@@ -1,0 +1,274 @@
+;( instruction-queque )
+;{
+  compile@@sizeQueque                     =                                       ( 16 )
+  compile@@maxQueque                      =                                       null
+  compile@@ptrQueque                      =                                       null
+  compile@@endQueque                      =                                       null
+  Postpone
+    compile@@lenQueque                    =                                       compile@@maxQueque
+  End Postpone
+  displayValue 'lenQueque     = 0x', compile@@lenQueque
+  Virtual                                 At null
+    compile@@lblQueque::
+      RB                                  ( compile@@lenQueque )
+      ;:  0x00  word  type
+      ;:  0x02  word  misc
+      ;:  0x04  dword size
+      ;:  0x08  qword value
+  End Virtual
+  Macro compile@@enque                    type*,              value*,             size:( null ),      misc:( null )
+    If ( compile@@endQueque >= compile@@maxQueque )
+      compile@@maxQueque                  =                                       ( compile@@endQueque + compile@@sizeQueque )
+    End If
+    Store                                 word  type                              At compile@@lblQueque:( compile@@endQueque + 0x00 )
+    Store                                 word  misc                              At compile@@lblQueque:( compile@@endQueque + 0x02 )
+    Store                                 dword size                              At compile@@lblQueque:( compile@@endQueque + 0x04 )
+    Store                                 qword value                             At compile@@lblQueque:( compile@@endQueque + 0x08 )
+    compile@@endQueque                    =                                       ( compile@@endQueque + 16 )
+  End Macro
+  Struc compile@@deque
+    If ( compile@@ptrQueque >= compile@@endQueque )
+      fail '[asm:compile] queque is empty'
+    End If
+    Local type, misc, size, value
+    Load                                  type  word                              From compile@@lblQueque:( compile@@ptrQueque + 0x00 )
+    Load                                  misc  word                              From compile@@lblQueque:( compile@@ptrQueque + 0x02 )
+    Load                                  size  dword                             From compile@@lblQueque:( compile@@ptrQueque + 0x04 )
+    Load                                  value qword                             From compile@@lblQueque:( compile@@ptrQueque + 0x08 )
+    .type                                 =                                       type
+    .misc                                 =                                       misc
+    .size                                 =                                       size
+    .value                                =                                       value
+    compile@@ptrQueque                    =                                       ( compile@@ptrQueque + 16 )
+  End Struc
+;}
+;( argument-stack )
+;{
+  compile@@sizeStack                    =                                       ( 16 )
+  compile@@maxStack                     =                                       null
+  compile@@ptrStack                     =                                       null
+  compile@@topStack                     =                                       null
+  Postpone
+    compile@@lenStack                   =                                       compile@@maxStack
+  End Postpone
+  displayValue 'lenStack      = 0x', compile@@lenStack
+  Virtual                               At null
+    compile@@lblStack::
+      RB                                ( compile@@lenStack )
+      ;:  0x00  word  type
+      ;:  0x02  word  misc
+      ;:  0x04  dword size
+      ;:  0x08  qword value
+  End Virtual
+  Macro compile@@push                   type*,              value*,             size:( null ),      misc:( null )
+    If ( compile@@ptrStack >= compile@@maxStack )
+      compile@@maxStack                 =                                       ( compile@@ptrStack + compile@@sizeStack )
+    End If
+    Store                               word  type                              At compile@@lblStack:( compile@@ptrStack + 0x00 )
+    Store                               word  misc                              At compile@@lblStack:( compile@@ptrStack + 0x02 )
+    Store                               dword size                              At compile@@lblStack:( compile@@ptrStack + 0x04 )
+    Store                               qword value                             At compile@@lblStack:( compile@@ptrStack + 0x08 )
+    compile@@ptrStack                   =                                       ( compile@@ptrStack + 16 )
+  End Macro
+  Struc compile@@peek                   offs:( null )
+    If ( compile@@ptrStack < null )
+      fail '[asm:compile] stack is empty'
+    End If
+    Local type, misc, size, value
+    Load                                type  word                              from compile@@lblStack:( compile@@ptrStack - ( 16 * offs ) + 0x00 )
+    Load                                misc  word                              from compile@@lblStack:( compile@@ptrStack - ( 16 * offs ) + 0x02 )
+    Load                                size  dword                             from compile@@lblStack:( compile@@ptrStack - ( 16 * offs ) + 0x04 )
+    Load                                value qword                             from compile@@lblStack:( compile@@ptrStack - ( 16 * offs ) + 0x08 )
+    .type                               =                                       type
+    .misc                               =                                       misc
+    .size                               =                                       size
+    .value                              =                                       value
+  End Struc
+  Struc compile@@pop
+    Local temp
+    compile@@ptrStack                   =                                       ( compile@@ptrStack - 16 )
+    temp                                compile@@peek
+    .type                               =                                       temp.type
+    .misc                               =                                       temp.misc
+    .size                               =                                       temp.size
+    .value                              =                                       temp.value
+  End Struc
+;}
+;( pop arguments and, if necessary, generate code to calculate them )
+;{
+  compile@@sizeTree                     =                                       ( 16 )
+  compile@@maxTree                      =                                       null
+  compile@@ptrTree                      =                                       null
+  Postpone
+    compile@@lenTree                    =                                       compile@@maxTree
+  End Postpone
+  displayValue 'lenTree       = 0x', compile@@lenTree
+  Virtual                               At null
+    compile@@lblTree::
+      RB                                ( compile@@lenTree )
+      ;:0x00    byte  type (const, variable, add, sub, ...)
+      ;:0x01    byte  null
+      ;:0x02    word  ershov
+      ;:0x04    dword *down
+      ;:union
+      ;{
+      ;:  0x08  dword *east
+      ;:  0x0c  dword *west
+      ;}{
+      ;:  0x08  qword value
+      ;}
+  End Virtual
+  Struc compile@@addTreeNode            instruction*,       east*,              west*
+    Local ershovEast, ershovWest
+    If (( compile@@ptrTree >= compile@@maxTree ))
+      compile@@maxTree                  =                                       ( compile@@ptrTree + compile@@sizeTree )
+    End If
+    If (( east < null ) | ( east >= compile@@ptrTree ))
+      fail '[asm:compile] invalid value of *east'
+    End If
+    If (( west < null ) | ( west >= compile@@ptrTree ))
+      fail '[asm:compile] invalid value of *west'
+    End If
+    Store                               byte  instruction                       At    compile@@lblTree:( compile@@ptrTree + 0x00 )
+    Store                               dword east                              At    compile@@lblTree:( compile@@ptrTree + 0x08 )
+    Store                               dword west                              At    compile@@lblTree:( compile@@ptrTree + 0x0c )
+    Store                               dword compile@@ptrTree                  At    compile@@lblTree:( east             + 0x04 )
+    Store                               dword compile@@ptrTree                  At    compile@@lblTree:( west             + 0x04 )
+    ; https://en.wikipedia.org/wiki/Ershov_Number
+    Load                                ershovEast word                         From  compile@@lblTree:( east             + 0x02 )
+    Load                                ershovWest word                         From  compile@@lblTree:( west             + 0x02 )
+    If      ( ershovEast > ershovWest )
+      Store                             word  ( ershovEast )                    At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+    Else If ( ershovEast < ershovWest )
+      Store                             word  ( ershovWest )                    At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+    Else If ( ershovEast = ershovWest )
+      Store                             word  ( ershovEast + 1 )                At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+    End If
+    .                                   =                                       compile@@ptrTree
+    compile@@ptrTree                    =                                       ( compile@@ptrTree + compile@@sizeTree )
+  End Struc
+  compile@@thisLeafIsEast               =                                       ( true )                                ;this is a constant
+  compile@@thisLeafIsWest               =                                       ( true )                                ;this is a constant
+  Struc compile@@addTreeLeaf            type*,                                  value*,                                 side*
+    If (( compile@@ptrTree >= compile@@lenTree ))
+      compile@@lenTree                  =                                       ( compile@@ptrTree + compile@@sizeTree )
+    End If
+    If      ( type = fbc0@@tConstant )
+      If ( side = compile@@thisLeafIsEast )
+        If ( compile@@hazCalcWithConst )
+          Store                         word  0                                 At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+        Else
+          Store                         word  1                                 At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+        End If
+      Else
+        Store                           word  1                                 At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+      End If
+    Else If ( type = fbc0@@tVariable )
+      If ( side = compile@@thisLeafIsEast )
+        If ( compile@@hazCalcWithVars )
+          Store                         word  0                                 At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+        Else
+          Store                         word  1                                 At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+        End If
+      Else
+        Store                           word  1                                 At    compile@@lblTree:( compile@@ptrTree + 0x02 )
+      End If
+    Else
+      fail '[asm:compile] only could add constant leafs or variables yet'
+    End If
+    Store                               byte  type                              At    compile@@lblTree:( compile@@ptrTree + 0x00 )
+    Store                               qword value                             At    compile@@lblTree:( compile@@ptrTree + 0x08 )
+    .                                   =                                       compile@@ptrTree
+    compile@@ptrTree                    =                                       ( compile@@ptrTree + compile@@sizeTree )
+  End Struc
+  compile@@wantConstantArgument         =                                       ( true )                                ;this is a constant for functions, that want a constant value as argument.
+  Struc compile@@popArgument            wantConstant:( false )
+    Local tmp, op1, op2
+    tmp                                 compile@@pop
+    If      ( tmp.type = fbc0@@tConstant )
+      .type                             =                                       fbc0@@tConstant
+      .value                            =                                       tmp.value
+    Else if ( tmp.type = fbc0@@tOperator )
+      ;:note: a ∘ b -> a b ∘ ->
+      ;> push a
+      ;> push b
+      ;> instruction
+      ;:->
+      ;> pop op2 = b
+      ;> pop op1 = a
+      If      ( tmp.value = fbc0@@opAdd )                                       ;< op1 + op2 >
+        op2                             compile@@popArgument                    wantConstant
+        op1                             compile@@popArgument                    wantConstant
+        If      (( op1.type = fbc0@@tConstant ) & ( op2.type = fbc0@@tConstant ))
+          .type                         =                                       fbc0@@tConstant
+          .value                        =                                       ( op1.value + op2.value )
+        Else If ( wantConstant = false )
+          If      (( op1.type = fbc0@@tConstant ) & ( op1.value = null ))       ;< 0 + op2 = op2 >
+            .type                       =                                       op2.type
+            .value                      =                                       op2.value
+          Else If (( op2.type = fbc0@@tConstant ) & ( op2.value = null ))       ;< op1 + 0 = op1 >
+            .type                       =                                       op1.type
+            .value                      =                                       op1.value
+          Else
+            op1                         compile@@addTreeLeaf                    op1.type,           op1.value,          compile@@thisLeafIsEast
+            op2                         compile@@addTreeLeaf                    op2.type,           op2.value,          compile@@thisLeafIsWest
+            .type                       =                                       fbc0@@tTreeNode
+            .value                      compile@@addTreeNode                    tmp.value,          op1,                op2
+          End If
+        Else
+          fail '[asm:compile] argument is not constant'
+        End If
+      Else If ( tmp.value = fbc0@@opSub )                                       ;< op1 - op2 >
+        op2                             compile@@popArgument                    wantConstant
+        op1                             compile@@popArgument                    wantConstant
+        If      (( .op1.type = fbc0@@tConstant ) & ( .op2.type = fbc0@@tConstant ))
+          .type                         =                                       fbc0@@tConstant
+          .value                        =                                       ( op1.value - op2.value )
+        Else If ( wantConstant = false )
+          .type                         =                                       fbc0@@tTreeNode
+          .value                        =                                       tmp.value
+        Else
+          fail '[asm:compile] argument is not constant'
+        End If
+      Else If ( tmp.value = fbc0@@opMul )                                       ;< op1 * op2 >
+        op2                             compile@@popArgument                    wantConstant
+        op1                             compile@@popArgument                    wantConstant
+        If      (( op1.type = fbc0@@tConstant ) & ( op2.type = fbc0@@tConstant ))
+          .type                         =                                       fbc0@@tConstant
+          .value                        =                                       ( op1.value * op2.value )
+        Else if (( op1.type = fbc0@@tConstant ) & ( op1.value = null ))
+          .type                         =                                       fbc0@@tConstant
+          .value                        =                                       ( null )
+        Else if (( op2.type = fbc0@@tConstant ) & ( op2.value = null ))
+          .type                         =                                       fbc0@@tConstant
+          .value                        =                                       ( null )
+        Else If ( wantConstant = false )
+          .type                         =                                       fbc0@@tTreeNode
+          .value                        =                                       tmp.value
+        Else
+          fail '[asm:compile] argument is not constant'
+        End If
+      Else If ( tmp.value = fbc0@@opDiv )                                       ;< op1 / op2 >
+        op2                             compile@@popArgument                    wantConstant
+        op1                             compile@@popArgument                    wantConstant
+        If      (( op1.type = fbc0@@tConstant ) & ( op2.type = fbc0@@tConstant ))
+          .type                         =                                       fbc0@@tConstant
+          .value                        =                                       ( op1.value / op2.value )
+        Else if (( op1.type = fbc0@@tConstant ) & ( op1.value = null ))
+          .type                         =                                       fbc0@@tConstant
+          .value                        =                                       ( null )
+        Else if (( op2.type = fbc0@@tConstant ) & ( op2.value = null ))
+          fail '[asm:compile] division by zero'
+        Else If ( wantConstant = false )
+          .type                         =                                       fbc0@@tTreeNode
+          .value                        =                                       tmp.value
+        Else
+          fail '[asm:compile] argument is not constant'
+        End If
+      Else
+        tmp                             fbc0@@mnemonic
+        fail < '[asm:compile] invalid operator: »', tmp, '«' >
+      End if
+    End If
+  End Struc
+;}

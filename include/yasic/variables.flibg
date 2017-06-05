@@ -135,7 +135,7 @@ Macro yasic@@newType                    theType*,                               
         End Macro
         uf4@@newLayer                                                           ;<function>
         yasic@@global                   Equ                                     -
-        fbc0@@function                  `varName, yasic@@#varName#_lenght,      yasic@@#theType#_theID,       numParameters
+        fbc0@@function                  `varName, yasic@@#varName#_lenght,      yasic@@#theType#_theID,       ( numParameters + 1 )
         yasic@@ctrLocalVariables
         display `theType, ' = function ', `varName, ' ( ', `theParameters, ' ):', 10
         display '{', 10

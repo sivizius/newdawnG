@@ -1,4 +1,4 @@
-Macro yasic@@push                       type*,              value*,             size:0,             misc:0
+Macro yasic@@push                       type*,              value*,             size:( null ),      misc:( null )
   ;display 'push', 10
   ;displayValue '  type  0x', type
   ;displayValue '  misc  0x', misc
@@ -6,7 +6,7 @@ Macro yasic@@push                       type*,              value*,             
   ;displayValue '  value 0x', value
   ;displayValue '  *ptr  0x', yasic@@ptrStack
   If ( yasic@@ptrStack >= yasic@@lenStack )
-    err 10, '[asm:yasic] stack to small. adjust yasic@@lenStack'
+    fail '[asm:yasic] stack to small. adjust yasic@@lenStack'
   End If
   Store                                 word  type                              At yasic@@lblStack:( yasic@@ptrStack + 0x00 )
   Store                                 word  misc                              At yasic@@lblStack:( yasic@@ptrStack + 0x02 )
@@ -16,7 +16,7 @@ Macro yasic@@push                       type*,              value*,             
 End Macro
 Struc yasic@@peek                       offs:0
   If ( yasic@@ptrStack < null )
-    err 10, '[asm:yasic] stack is empty'
+    fail '[asm:yasic] stack is empty'
   End If
   Local type, misc, size, value
   Load                                  type  word                              from yasic@@lblStack:( yasic@@ptrStack - ( 16 * offs ) + 0x00 )
@@ -63,7 +63,7 @@ Macro yasic@@pushHelp                   type*,              value*,             
   ;displayValue '  value 0x', value
   ;displayValue '  *ptr  0x', yasic@@ptrHelpStack
   If ( yasic@@ptrHelpStack >= yasic@@lenHelpStack )
-    err 10, '[asm:yasic] help-stack to small. adjust yasic@@lenHelpStack'
+    fail '[asm:yasic] help-stack to small. adjust yasic@@lenHelpStack'
   End If
   Store                                 word  type                              At yasic@@lblHelpStack:( yasic@@ptrHelpStack + 0x00 )
   Store                                 word  misc                              At yasic@@lblHelpStack:( yasic@@ptrHelpStack + 0x02 )
@@ -73,7 +73,7 @@ Macro yasic@@pushHelp                   type*,              value*,             
 End Macro
 Struc yasic@@peekHelp                   offs:0
   If ( yasic@@ptrHelpStack < null )
-    err 10, '[asm:yasic] help-stack is empty'
+    fail '[asm:yasic] help-stack is empty'
   End If
   Local type, misc, size, value
   Load                                  type  word                              from yasic@@lblHelpStack:( yasic@@ptrHelpStack - ( 16 * offs ) + 0x00 )

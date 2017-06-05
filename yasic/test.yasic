@@ -1,4 +1,4 @@
-qword hello( qword arg1, arg2, arg3, arg4 = 444 )
+qword hello( qword arg1, arg2, arg3 )
   pushConstant ( 0x66 )
   qword a = 1
   qword b = 1

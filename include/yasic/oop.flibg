@@ -1,5 +1,4 @@
 Macro package                           lstArguments&
-  
 End Macro
 Macro class                             lstArgument&
   Local theArgument, restArgument

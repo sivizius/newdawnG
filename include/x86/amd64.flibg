@@ -16,4 +16,7 @@ Macro amd64@@code
   ptrCode                               uf4@@allocateLayer                      ( null )
   uf4@@newLayer
 End Macro
+Macro amd64@@compile
+  
+End Macro
 format@@addCodeSpace                    amd64,                                  amd64@@code
