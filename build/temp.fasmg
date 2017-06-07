@@ -1,0 +1,2 @@
+compile@@theInputFile equ 'final/test.uf4'
+include 'compilers/linux_amd64.fasmg'

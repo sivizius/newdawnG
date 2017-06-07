@@ -1,0 +1,309 @@
+Macro dataDecimal                       value*,                                 zeros:( 1 )
+  Local temp, help, size, length
+  help                                  =                                       ( 10 )
+  temp                                  =                                       ( value )
+  size                                  =                                       ( null )
+  If ( zeros > length )
+    Repeat ( zeros - length )
+      db '0'
+    End Repeat
+  End If
+  While ( temp >= help )
+    help                                =                                       ( help * 10 )
+  End While
+  While ( help > 0 )
+    help                                =                                       ( help / 10 )
+    Repeat 10
+      If ( temp < ( help * % ))
+        db ( '0' + % - 1 )
+        size                            =                                       ( size + 1 )
+        temp                            =                                       ( temp - ( help * ( % - 1 )))
+        Break
+      End If
+    End Repeat
+  End While
+  length                                =                                       ( size )
+End Macro
+Macro pdf@@theFormat
+  Local ptrStartOfFile
+  ;( handle objects )
+  ;{
+    Local objInfo, objPages, objRoot
+    Local lblObjects, ctrObjects, numObjects, sizeObjects
+    sizeObjects                         =                                       ( 8 )
+    Virtual                             At null
+      lblObjects::
+        rb                              ( numObjects * sizeObjects )
+        db                              ''
+    End Virtual
+    ctrObjects                          =                                       null
+    Struc object
+      ctrObjects                        =                                       ( ctrObjects + 1 )
+      db                                10
+      dataDecimal                       ( ctrObjects )
+      Store                             dword ( $% - ptrStartOfFile )           At   lblObjects:((( ctrObjects - 1 ) * sizeObjects ) + 0x00 )
+      db                                ' 0 obj', 10
+      Macro end?.object
+        Local offs
+        Load                            offs dword                              From lblObjects:((( ctrObjects - 1 ) * sizeObjects ) + 0x00 )
+        Store                           dword ( $% - offs )                     At   lblObjects:((( ctrObjects - 1 ) * sizeObjects ) + 0x04 )
+        db                              'endobj', 10
+        Purge end?.object
+      End Macro
+      Macro stream
+        Local offs, size
+        dictionary
+          keyNum                        '/Length',                              ( size )
+        end dictionary
+        db                              'stream', 10
+        offs                            =                                       ( $% )
+        Macro end?.stream
+          size                          =                                       ( $% - offs )
+          db                            10, 'endstream', 10
+        End Macro
+      End Macro
+      .                                 =                                       ( ctrObjects )
+    End Struc
+    Macro object
+      Local temp
+      temp                              object
+    End Macro
+    Struc aboutObject                   num*
+      Local offs, size
+      Load                              offs dword                              From lblObjects:((( num - 1 ) * sizeObjects ) + 0x00 )
+      Load                              size dword                              From lblObjects:((( num - 1 ) * sizeObjects ) + 0x04 )
+      .offs                             =                                       offs
+      .size                             =                                       size
+    End Struc
+  ;}
+  ;( make some nice )
+  ;{
+    Local indentation
+    indentation                         =                                       null
+    Macro indent                        string&
+      Repeat indentation
+        db                              '  '
+      End Repeat
+      Match any, string
+        db                              string
+      End Match
+    End Macro
+    Macro dictionary
+      indent                            '<<', 10
+      indentation                       =                                       ( indentation + 1 )
+      Macro end?.dictionary
+        indentation                     =                                       ( indentation - 1 )
+        indent                          '>>', 10
+      End Macro
+    End Macro
+    Macro array
+      db                                '['
+      Macro end?.array
+        db                              ']'
+      End Macro
+    End Macro
+    Macro reference                     obj*
+      dataDecimal                       ( obj )
+      db                                ' 0 R'
+    End Macro
+    Macro keyRef                        key*,                                   refer*
+      indent                            key
+      db                                ' '
+      reference                         refer
+      db                                10
+    End Macro
+    Macro keyNum                        key*,                                   value*
+      indent                            key
+      db                                ' '
+      dataDecimal                       ( value )
+      db                                10
+    End Macro
+  ;}
+  ;( handle pages )
+  ;{
+    Local lblPages, ctrPages, numPages, sizePages
+    sizePages                           =                                       ( 8 )
+    Virtual                             At null
+      lblPages::
+        rb                              ( numPages * sizePages )
+        db                              ''                                      ;srsly, idk y i need tihs, but otherwize it will crash
+    End Virtual
+    Load temp byte from lblPages:( 0 )
+    display temp
+    ctrPages                            =                                       null
+    Struc page
+      Local temp, content
+      temp                              object
+        dictionary
+          indent                        '/Type',                                ' /Page', 10
+          keyRef                        '/Contents',                            ( content )
+          keyRef                        '/Parent',                              ( objPages )
+          indent                        '/Resources', 10
+          dictionary
+            indent                      '/Font', 10
+            dictionary
+              indent                    '/F1', 10
+              dictionary
+                indent                  '/Type',                                ' /Font', 10
+                indent                  '/Subtype',                             ' /Type1', 10
+                indent                  '/BaseFont',                            ' /Times-Roman', 10
+              end dictionary
+            end dictionary
+          end dictionary
+        end dictionary
+      end object
+      Store                             dword temp                              At lblPages:( ctrPages * sizePages + 0x00 )
+      ctrPages                          =                                       ( ctrPages + 1 )
+      content                           object
+          stream
+      Macro text
+        db                              'BT', 10
+        Macro setFont                   fontFace*,                              fontSize*
+          db                            '/F'
+          dataDecimal                   fontFace
+          db                            ' '
+          dataDecimal                   fontSize
+          db                            ' Tf', 10
+        End Macro
+        Macro setXY                     xPos*,                                  yPos*
+          dataDecimal                   xPos
+          db                            ' '
+          dataDecimal                   yPos
+          db                            ' Td', 10
+        End Macro
+        Macro putChars                  string&
+          db '(', string, ') Tj', 10
+        End Macro
+        Macro putString                 string&
+          Local offs, chars
+          db '['
+            irp <offs, chars>, string
+              If ( offs <> null )
+                dataDecimal             ( offs )
+              End If
+              db '(', chars, ')'
+            end irp
+          db '] TJ', 10
+        End Macro
+        Macro end?.text
+          db                            'ET'
+          Purge setFont, setXY, putString
+        End Macro
+      End Macro
+      Macro end?.page
+          end stream
+        end object
+        Purge end?.page
+      End Macro
+    End Struc
+    Macro page
+      Local temp
+      temp                              page
+    End Macro
+    Struc aboutPage                     num
+      Local temp
+      Load                              temp dword                              From lblPages:( num * sizePages )
+      .                                 =                                       temp
+    End Struc
+  ;}
+  ;( page size )
+  ;{
+    Local xSize, ySize
+    xSize                               =                                       200
+    ySize                               =                                       200
+    Macro setSize                       width*,                                 height*
+      xSize                             =                                       width
+      ySize                             =                                       height
+    End Macro
+  ;}
+  ;( handle fonts )
+  ;{
+    Macro loadFont                      nameFont*
+      
+    End Macro
+    Macro font
+      object
+        db
+      Macro end?.font
+        Purge end?.font
+      End Macro
+    End Macro
+  ;}
+  Local ptrXRef
+  Macro pdf@@endFormat
+    Local ctr, tmp
+    objPages object
+      dictionary
+        indent                          '/Type /Pages', 10
+        indent                          '/Kids '
+        array
+          Repeat ( numPages ), ctr:( null )
+            db                          ' '
+            tmp                         aboutPage                               ctr
+            reference                   tmp
+          End Repeat
+          db                            ' '
+        end array
+        db                              10
+        keyNum                          '/Count',                               ( numPages )
+        indent                          '/MediaBox '
+        array
+          db                            ' 0 0 '
+          dataDecimal                   ( xSize )
+          db                            ' '
+          dataDecimal                   ( ySize )
+          db                            ' '
+        end array
+        db                              10
+      end dictionary
+    end object
+    objRoot object
+      dictionary
+        indent                          '/Type /Catalog', 10
+        keyRef                          '/Pages',                               ( objPages )
+      end dictionary
+    end object
+    ptrXRef                             =                                       ( $% )
+    db                                  'xref', 10
+    keyNum                              '0',                                    ( numObjects )
+    Repeat ( numObjects ), ctr:( 1 )
+      tmp                               aboutObject                             ( ctr )
+      If ( tmp.offs <= 999999999 )
+        dataDecimal                     ( tmp.offs ),                           10
+      Else
+        fail '[asm:pdf] offset of object is too large'
+      End If
+      db                                ' '
+      If ( tmp.size <= 99999 )
+        dataDecimal                     ( tmp.size ),                           5
+      Else
+        fail '[asm:pdf] size of object is too large'
+      End If
+      db                                ' n ', 10
+    End Repeat
+    indent                              'trailer', 10
+    dictionary
+      keyNum                            '/Size',                                ( numObjects )
+      keyRef                            '/Root',                                ( objRoot )
+    end dictionary
+    indent                              'startxref', 10
+    dataDecimal                         ( ptrXRef )
+    db                                  10, '%%EOF', 10
+    numObjects                          =                                       ( ctrObjects )
+    numPages                            =                                       ( ctrPages )
+    Purge object, page, setSize
+    Restruc object, page
+  End Macro
+  ptrStartOfFile                        =                                       ( $% )
+  db                                    '%PDF-1.1', 10
+  db                                    '%123456', 10
+  objInfo object
+    db                                  '<<', 10
+    db                                  '  /CreationDate (D:19990628091919)', 10
+    db                                  '  /Author (_sivizius)', 10
+    db                                  '  /Title (This is the name, my only friend, the name, the name.)', 10
+    db                                  '  /Creator (with fasmG)', 10
+    db                                  '>>', 10
+  end object
+End Macro
+format@@addFormat                       pdf,                pdf@@theFormat,     pdf@@endFormat

@@ -83,5 +83,111 @@ Macro compile@@parse                    numOfArgsInRegs:( null ),     \
   compile@@numOfRegularRegs             =                                       ( numOfRegularRegs )                    ;number of general purpose register
   compile@@hazCalcWithConst             =                                       ( hazCalcWithConst )                    ;is `add r1, 0x13372342` allowed?
   compile@@hazCalcWithVars              =                                       ( hazCalcWithVars )                     ;is `add r1, byte [ a ]` allowed?
+  ;( indented display )
+  ;{
+    ;may removed later
+    Local deepness
+    deepness                            =                                       1
+    Macro goDeeper
+      deepness                          =                                       ( deepness + 1 )
+    End Macro
+    Macro goHigher
+      deepness                          =                                       ( deepness - 1 )
+    End Macro
+    Macro displayDeep                   string&
+      Repeat ( deepness )
+        display '  '
+      End Repeat
+      display string
+    End Macro
+  ;}
+  ;( list of functions i have to parse )
+  ;{
+    Local lblFunctions, theFunctions, ctrFunctions, numFunctions, sizeFunctions
+    ctrFunctions                        =                                       null
+    theFunctions                        =                                       null
+    sizeFunctions                       =                                       ( 4 )
+    Virtual                             At null
+      lblFunctions::
+        RB                              ( numFunctions * sizeFunctions )
+        ;:  0x00  dword fbc-address
+    End Virtual
+    Struc getFunction                   offs*
+      Local temp
+      Load                              temp dword                              From lblFunctions:( offs * sizeFunctions )
+      .                                 =                                       ( temp )
+    End Struc
+    Macro addFunction                   fbcAddress*
+      Store                             dword fbcAddress                        At lblFunctions:( ctrFunctions * sizeFunctions )
+      ctrFunctions                      =                                       ( ctrFunctions + 1 )
+    End Macro
+  ;}
+  ;( register-arguments )
+  ;{
+    Local lblArguments, sizeArguments, ptrArguments
+    sizeArguments                       =                                       ( 16 )
+    ptrArguments                        =                                       null
+    Virtual                             At null
+      lblArguments::
+        RB                              ( sizeArguments * compile@@numOfArgsInRegs )
+        ;:  0x00  byte  type
+        ;:  0x02  word  ershov
+        ;:  0x08  qword value
+    End Virtual
+  ;}
+  ;( register-allocation )
+  ;{
+    Local lblRegularRegister
+    Virtual                             At null
+      lblRegularRegister::
+        RB                              compile@@numOfRegularRegs
+    End Virtual
+    Macro free                          register*
+      If (( register >= 0 ) & ( register < compile@@numOfRegularRegs ))
+        Store                           byte  null                              At    lblRegularRegister:( register )
+      End If
+    End Macro
+    Struc allocRegister
+      Local temp
+      Repeat ( compile@@numOfRegularRegs )
+        Load                            temp  byte                              From  lblRegularRegister:( % - 1 )
+        If ( temp = 0x00 )
+          .                             =                                       ( % - 1 )
+          Break
+        End If
+      End Repeat
+      .                                 =                                       nil
+    End Struc
+  ;}
+  ;( map fbc-address -> real address )
+  ;{
+;    Local lblJumps, ctrJumps, numJumps, sizeJumps
+;    ctrJumps                            =                                       null
+;    sizeJumps                           =                                       ( 8 )
+;    Virtual                             At null
+;      lblJumps::
+;        RB                              ( numJumps * sizeJumps )
+;        ;:  0x00  dword fbc-address
+;        ;:  0x00  dword real address
+;    End Virtual
+;    Macro addJump                       fbcAddress*,                            newAddress*
+;      Store                             dword fbcAddress                        At lblJumps:(( ctrJumps * sizeJumps ) + 0x00 )
+;      Store                             dword newAddress                        At lblJumps:(( ctrJumps * sizeJumps ) + 0x04 )
+;      ctrJumps                          =                                       ( ctrJumps + 1 )
+;    End Macro
+  ;}
+  ;( pure functional instructions with two arguments, e.g. `add a, b` )
+  ;{
+    Macro operator                      name*,                                  value*
+      If ( compile@@ptrStack < 32 )
+        fail < '[asm:compile] ', name, ' need 2 arguments in stack' >
+      End If
+      displayDeep '#', name, 10
+      compile@@push                     fbc0@@tOperator,                        ( value )
+    End Macro
+  ;}
   uf4@@parseFile                        compile@@theInputFile,                  compile@@buildYapter,                   compile@@loadYapter
+  numFunctions                          =                                       ( ctrFunctions )
+  Purge operator, addJump, allocRegister, freeRegister, addFunction, getFunction, goDeeper, goHigher, displayDeep
+  ;numJumps                              =                                       ( ctrJumps )
 End Macro

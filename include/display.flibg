@@ -39,6 +39,27 @@ Macro displayHexByte                    value*
   End Repeat
 End Macro
 Macro displayValue                      string*,                                value*
+  displayValueQWord                     string,                                 value
+End Macro
+
+Macro displayValueByte                  string*,                                value*
+  display string
+  displayHexByte value
+  display 10
+End Macro
+Macro displayValueWord                  string*,                                value*
+  display string
+  displayHexWord value
+  display 10
+End Macro
+
+Macro displayValueDWord                 string*,                                value*
+  display string
+  displayHexDWord value
+  display 10
+End Macro
+
+Macro displayValueQWord                 string*,                                value*
   display string
   displayHexQWord value
   display 10

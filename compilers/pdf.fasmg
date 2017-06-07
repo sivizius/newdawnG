@@ -1,0 +1,15 @@
+Include 'include/main.flibg'
+Include 'include/display.flibg'
+Include 'include/format.flibg'
+format pdf
+  loadFont                              '/Times-Roman'
+  page
+    text
+      setFont                           1,                                      12
+      setXY                             100,                                    100
+;      putString 0,  'Hello', \
+;                20, 'World'
+      putChars 'Hello World'
+    end text
+  end page
+end format

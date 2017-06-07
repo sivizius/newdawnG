@@ -1,0 +1,75 @@
+%PDF-1.1
+%123456
+
+1 0 obj
+<<
+  /CreationDate (D:19990628091919)
+  /Author (_sivizius)
+  /Title (This is the name, my only friend, the name, the name.)
+  /Creator (with fasmG)
+>>
+endobj
+
+2 0 obj
+<<
+  /Type /Page
+  /Contents 3 0 R
+  /Parent 4 0 R
+  /Resources
+  <<
+    /Font
+    <<
+      /F1
+      <<
+        /Type /Font
+        /Subtype /Type1
+        /BaseFont /Times-Roman
+      >>
+    >>
+  >>
+>>
+endobj
+
+3 0 obj
+<<
+  /Length 43
+>>
+stream
+BT
+/F1 12 Tf
+100 100 Td
+(Hello World) Tj
+ET
+endstream
+endobj
+
+4 0 obj
+<<
+  /Type /Pages
+  /Kids [ 2 0 R ]
+  /Count 1
+  /MediaBox [ 0 0 200 200 ]
+>>
+endobj
+
+5 0 obj
+<<
+  /Type /Catalog
+  /Pages 4 0 R
+>>
+endobj
+xref
+0 5
+0000000019 00159 n 
+0000000187 00211 n 
+0000000407 00087 n 
+0000000503 00085 n 
+0000000597 00045 n 
+trailer
+<<
+  /Size 5
+  /Root 5 0 R
+>>
+startxref
+649
+%%EOF

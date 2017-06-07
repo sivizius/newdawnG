@@ -67,4 +67,5 @@ End Macro
 ;( some formats )
 ;{
   Include                               'include/format/uf4.flibg'
+  Include                               'include/format/pdf.flibg'
 ;}

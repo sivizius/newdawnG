@@ -62,7 +62,7 @@ case $1 in
   ;;
   "linux-amd64")
     echo "compile@@theInputFile equ '$2'"                   >         "build/temp.fasmg"
-    echo "include 'compilers/linux-amd64.fasmg'"            >>        "build/temp.fasmg"
+    echo "include 'compilers/linux_amd64.fasmg'"            >>        "build/temp.fasmg"
     output="final/$name.uf4"
     echo "fasmg 'build/temp.fasmg' '$output'"               2>&1| tee "build/$name.log"
     fasmg "build/temp.fasmg" "$output"                      2>&1| tee "build/$name.log"
